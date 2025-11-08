@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Media Control Admin Panel</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Fira Code', 'Courier New', monospace;
+            background: #1a1a1a;
+            color: #d4d4d4;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #569cd6;
+            margin-bottom: 30px;
+            font-size: 2rem;
+        }
+
+        .status {
+            padding: 15px;
+            background: rgba(45, 45, 45, 0.8);
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border-left: 4px solid #569cd6;
+        }
+
+        .status.connected {
+            border-left-color: #27c93f;
+        }
+
+        .status.disconnected {
+            border-left-color: #ff5f56;
+        }
+
+        .control-section {
+            background: rgba(45, 45, 45, 0.8);
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .control-section h2 {
+            color: #569cd6;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: rgba(86, 156, 214, 0.2);
+            border: 1px solid #569cd6;
+            border-radius: 4px;
+            color: #569cd6;
+            cursor: pointer;
+            font-family: 'Fira Code', 'Courier New', monospace;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background: rgba(86, 156, 214, 0.3);
+        }
+
+        button.active {
+            background: rgba(86, 156, 214, 0.5);
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #858585;
+            font-size: 12px;
+        }
+
+        input,
+        textarea,
+        select {
+            width: 100%;
+            padding: 8px;
+            background: rgba(30, 30, 30, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            color: #d4d4d4;
+            font-family: 'Fira Code', 'Courier New', monospace;
+            font-size: 14px;
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .mode-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .mode-buttons button {
+            flex: 1;
+        }
+
+        /* Mobile Responsive Styles */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                max-width: 100%;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+                margin-bottom: 20px;
+            }
+
+            .control-section {
+                padding: 15px;
+                margin-bottom: 15px;
+            }
+
+            .control-section h2 {
+                font-size: 1.1rem;
+                margin-bottom: 12px;
+            }
+
+            button {
+                padding: 12px 16px;
+                font-size: 16px; /* Larger for easier tapping */
+                min-height: 44px; /* Minimum touch target size */
+                flex: 1 1 auto;
+                min-width: 120px;
+            }
+
+            .button-group {
+                gap: 8px;
+            }
+
+            .button-group button {
+                flex: 1 1 calc(50% - 4px); /* Two buttons per row on mobile */
+            }
+
+            .button-group button:only-child {
+                flex: 1 1 100%; /* Full width if only one button */
+            }
+
+            input,
+            textarea,
+            select {
+                font-size: 16px; /* Prevents zoom on iOS */
+                padding: 12px;
+                min-height: 44px; /* Minimum touch target size */
+            }
+
+            textarea {
+                min-height: 120px;
+            }
+
+            .mode-buttons {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .mode-buttons button {
+                width: 100%;
+            }
+
+            .status {
+                padding: 12px;
+                font-size: 14px;
+            }
+
+            label {
+                font-size: 14px;
+                margin-bottom: 8px;
+            }
+
+            .player-list {
+                max-height: 200px !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.3rem;
+            }
+
+            .control-section {
+                padding: 12px;
+            }
+
+            button {
+                padding: 14px 12px;
+                font-size: 15px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .button-group button {
+                flex: 1 1 100%;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Media Control Admin Panel</h1>
+
+        <div class="status disconnected" id="status">
+            <strong>Status:</strong> <span id="status-text">Disconnected</span>
+        </div>
+
+        <div class="control-section">
+            <h2>Window Control</h2>
+            <div class="button-group">
+                <button onclick="sendCommand({action: 'show'})">Show Window</button>
+                <button onclick="sendCommand({action: 'hide'})">Hide Window</button>
+                <button onclick="sendCommand({action: 'toggle'})">Toggle Window</button>
+            </div>
+        </div>
+
+        <div class="control-section">
+            <h2>Video Mode</h2>
+            <div class="input-group">
+                <label>Video URL (supports YouTube or direct video files):</label>
+                <input type="text" id="video-url"
+                    placeholder="https://youtube.com/watch?v=... or https://example.com/video.mp4" value="">
+            </div>
+            <button onclick="sendVideoCommand()">Show Video</button>
+        </div>
+
+        <div class="control-section">
+            <h2>Image Mode</h2>
+            <div class="input-group">
+                <label>Image URL:</label>
+                <input type="text" id="image-url" placeholder="https://example.com/image.png" value="">
+            </div>
+            <button onclick="sendImageCommand()">Show Image</button>
+        </div>
+
+        <div class="control-section">
+            <h2>Text Mode</h2>
+            <div class="input-group">
+                <label>Title:</label>
+                <input type="text" id="text-title" placeholder="Title" value="CodeCamp Sponsors 2025">
+            </div>
+            <div class="input-group">
+                <label>Content:</label>
+                <textarea id="text-content"
+                    placeholder="Content">Our sponsors make this possible. Please support them!</textarea>
+            </div>
+            <button onclick="sendTextCommand()">Show Text</button>
+        </div>
+
+        <div class="control-section">
+            <h2>Event Announcements Ticker</h2>
+            <div class="input-group">
+                <label>Announcements (one per line):</label>
+                <textarea id="ticker-announcements" rows="6" placeholder="Enter announcements, one per line">Welcome to CodeCamp 2025!
+Join the game at /game
+Follow us on social media #CodeCamp2025</textarea>
+            </div>
+            <div class="button-group">
+                <button onclick="updateTicker()">Update Ticker</button>
+                <button onclick="clearTicker()">Clear Ticker</button>
+            </div>
+            <div class="input-group" style="margin-top: 12px;">
+                <label>Quick Add:</label>
+                <div class="button-group">
+                    <button onclick="addTickerAnnouncement('Break time in 5 minutes')">Break Reminder</button>
+                    <button onclick="addTickerAnnouncement('Lunch is being served')">Lunch Alert</button>
+                    <button onclick="addTickerAnnouncement('Game starting soon!')">Game Alert</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="control-section">
+            <h2>Notifications</h2>
+            <div class="input-group">
+                <label>Notification Type:</label>
+                <div class="mode-buttons">
+                    <button onclick="setNotificationType('info')" id="notif-type-info" class="active">Info</button>
+                    <button onclick="setNotificationType('success')" id="notif-type-success">Success</button>
+                    <button onclick="setNotificationType('warning')" id="notif-type-warning">Warning</button>
+                    <button onclick="setNotificationType('error')" id="notif-type-error">Error</button>
+                </div>
+            </div>
+            <div class="input-group">
+                <label>Pre-canned Notifications:</label>
+                <div class="button-group" id="button-group">
+
+                </div>
+            </div>
+            <div class="input-group">
+                <label>Custom Notification Title:</label>
+                <input type="text" id="notif-title" placeholder="Notification title" value="">
+            </div>
+            <div class="input-group">
+                <label>Custom Notification Message:</label>
+                <textarea id="notif-message" placeholder="Notification message"></textarea>
+            </div>
+            <div class="button-group">
+                <button onclick="sendCustomNotification()">Send Custom Notification</button>
+                <button onclick="dismissAllNotifications()"
+                    style="background: rgba(255, 95, 86, 0.2); border-color: #ff5f56; color: #ff5f56;">Dismiss All
+                    Notifications</button>
+            </div>
+        </div>
+
+        <div class="control-section">
+            <h2>Game Control</h2>
+            <div class="input-group">
+                <label>Select Game:</label>
+                <select id="game-select" onchange="selectGame()">
+                    <option value="">Loading games...</option>
+                </select>
+            </div>
+            <div class="button-group">
+                <button onclick="startGame()" style="background: rgba(39, 201, 63, 0.2); border-color: #27c93f; color: #27c93f;">Start Game</button>
+                <button onclick="stopGame()" style="background: rgba(255, 95, 86, 0.2); border-color: #ff5f56; color: #ff5f56;">Stop Game</button>
+            </div>
+            <div class="button-group" style="margin-top: 12px;">
+                <button onclick="toggleGameWindow()" style="background: rgba(86, 156, 214, 0.2); border-color: #569cd6; color: #569cd6;">Toggle Game Window</button>
+            </div>
+        </div>
+
+        <div class="control-section">
+            <h2>Connected Players</h2>
+            <div class="input-group">
+                <label>Total Players: <span id="player-count">0</span></label>
+            </div>
+            <div class="player-list" id="player-list" style="max-height: 300px; overflow-y: auto; margin-top: 12px;">
+                <div style="color: #858585; font-size: 0.9rem; padding: 8px;">No players connected</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        const statusEl = document.getElementById('status');
+        const statusTextEl = document.getElementById('status-text');
+        let socketConnected = false;
+
+        socket.on('connect', () => {
+            socketConnected = true;
+            statusEl.classList.remove('disconnected');
+            statusEl.classList.add('connected');
+            statusTextEl.textContent = 'Connected';
+            console.log('Socket connected');
+        });
+        
+        // Check initial connection state
+        if (socket.connected) {
+            socketConnected = true;
+        }
+
+        socket.on('disconnect', () => {
+            socketConnected = false;
+            statusEl.classList.remove('connected');
+            statusEl.classList.add('disconnected');
+            statusTextEl.textContent = 'Disconnected';
+            console.log('Socket disconnected');
+        });
+
+        function sendCommand(data) {
+            socket.emit('media-control', data);
+        }
+
+        function sendVideoCommand() {
+            const url = document.getElementById('video-url').value;
+            sendCommand({
+                action: 'mode',
+                mode: 'video',
+                url: url
+            });
+        }
+
+        function sendImageCommand() {
+            const url = document.getElementById('image-url').value;
+            sendCommand({
+                action: 'mode',
+                mode: 'image',
+                url: url
+            });
+        }
+
+        function sendTextCommand() {
+            const title = document.getElementById('text-title').value;
+            const content = document.getElementById('text-content').value;
+            sendCommand({
+                action: 'mode',
+                mode: 'text',
+                title: title,
+                content: content
+            });
+        }
+
+        let currentNotificationType = 'info';
+
+        function setNotificationType(type) {
+            currentNotificationType = type;
+            document.querySelectorAll('[id^="notif-type-"]').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(`notif-type-${type}`).classList.add('active');
+        }
+
+        const preCannedNotifications = {
+            'break-start': {
+                type: 'info',
+                title: 'Break Time',
+                message: 'Take a 15-minute break. Refreshments available in the lobby.'
+            },
+            'breakfast': {
+                type: 'success',
+                title: 'Breakfast Time',
+                message: 'Breakfast is now being served. Please proceed to the dining area.'
+            },
+            'dinner': {
+                type: 'success',
+                title: 'Dinner Time',
+                message: 'Dinner is now being served. Please proceed to the dining area.'
+            },
+            'lunch': {
+                type: 'success',
+                title: 'Lunch Time',
+                message: 'Lunch is now being served. Please proceed to the dining area.'
+            },
+            'prize-time': {
+                type: 'info',
+                title: 'Prize Time',
+                message: 'Prize time is now. Please make some noise!'
+            },
+            // family friendly joke
+            'joke': {
+                type: 'info',
+                title: 'Tech Humor',
+                message: 'Why did the computer scientist get a virus? Because he downloaded a file from a website.'
+            },
+            'joke-2': {
+                type: 'info',
+                title: 'Binary Laughs',
+                message: 'What do you call a programmer who reads binary code? A decoder.'
+            },
+            'joke-3': {
+                type: 'info',
+                title: 'Developer Wisdom',
+                message: 'Why do programmers prefer dark mode? Because light attracts bugs!'
+            },
+            'joke-4': {
+                type: 'info',
+                title: 'Hardware vs Software',
+                message: 'How many programmers does it take to change a light bulb? None, that\'s a hardware problem.'
+            },
+            'joke-5': {
+                type: 'info',
+                title: 'Memory Matters',
+                message: 'Why did the developer go broke? Because he used up all his cache.'
+            },
+            'joke-6': {
+                type: 'info',
+                title: 'Coding Comedy',
+                message: 'What\'s a programmer\'s favorite hangout spot? The Foo Bar.'
+            },
+            'joke-7': {
+                type: 'info',
+                title: 'Programming Puns',
+                message: 'Why do Java developers wear glasses? Because they don\'t C#.'
+            },
+            'joke-8': {
+                type: 'info',
+                title: 'Byte-Sized Humor',
+                message: 'What do you call 8 hobbits? A hobbyte.'
+            },
+            'joke-9': {
+                type: 'info',
+                title: 'Framework Feels',
+                message: 'Why was the JavaScript developer sad? Because he didn\'t Node how to Express himself.'
+            },
+            'joke-10': {
+                type: 'info',
+                title: 'Network Nonsense',
+                message: 'What did the router say to the doctor? It hurts when IP.'
+            }
+        };
+
+        // ADD PRE-CANNED NOTIFICATIONS TO THE BUTTON GROUP
+        const buttonGroup = document.getElementById('button-group');
+        Object.keys(preCannedNotifications).forEach(key => {
+            const button = document.createElement('button');
+            button.onclick = () => sendPreCannedNotification(key);
+            button.textContent = preCannedNotifications[key].title;
+            buttonGroup.appendChild(button);
+        });
+
+        function sendPreCannedNotification(key) {
+            const notification = preCannedNotifications[key];
+            if (notification) {
+                socket.emit('notification', {
+                    ...notification,
+                    id: `notif-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+                });
+            }
+        }
+
+        function sendCustomNotification() {
+            const title = document.getElementById('notif-title').value.trim();
+            const message = document.getElementById('notif-message').value.trim();
+
+            if (!title && !message) {
+                alert('Please enter a title or message');
+                return;
+            }
+
+            socket.emit('notification', {
+                type: currentNotificationType,
+                title: title || currentNotificationType.toUpperCase(),
+                message: message || '',
+                id: `notif-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+            });
+
+            // Clear inputs
+            document.getElementById('notif-title').value = '';
+            document.getElementById('notif-message').value = '';
+        }
+
+        function dismissAllNotifications() {
+            socket.emit('dismiss-notification', { id: 'all' });
+        }
+
+        function updateTicker() {
+            console.log('updateTicker called');
+            try {
+                // Check both socketConnected flag and socket.connected property
+                if (!socketConnected && !socket.connected) {
+                    alert('Socket not connected. Please wait for connection.');
+                    console.error('Socket not connected');
+                    return;
+                }
+                
+                const textarea = document.getElementById('ticker-announcements');
+                if (!textarea) {
+                    console.error('Ticker textarea not found');
+                    alert('Error: Ticker textarea not found');
+                    return;
+                }
+                
+                const announcements = textarea.value
+                    .split('\n')
+                    .map(line => line.trim())
+                    .filter(line => line.length > 0);
+                
+                if (announcements.length === 0) {
+                    alert('Please enter at least one announcement');
+                    return;
+                }
+                
+                console.log('Updating ticker with announcements:', announcements);
+                socket.emit('ticker-update', { announcements });
+                console.log('Ticker update emitted successfully');
+            } catch (error) {
+                console.error('Error updating ticker:', error);
+                alert('Error updating ticker: ' + error.message);
+            }
+        }
+
+        function clearTicker() {
+            console.log('clearTicker called');
+            try {
+                // Check both socketConnected flag and socket.connected property
+                if (!socketConnected && !socket.connected) {
+                    alert('Socket not connected. Please wait for connection.');
+                    console.error('Socket not connected');
+                    return;
+                }
+                
+                const textarea = document.getElementById('ticker-announcements');
+                if (!textarea) {
+                    console.error('Ticker textarea not found');
+                    return;
+                }
+                
+                textarea.value = '';
+                console.log('Clearing ticker');
+                socket.emit('ticker-update', { announcements: ['Welcome to CodeCamp 2025!'] });
+                console.log('Ticker clear emitted successfully');
+            } catch (error) {
+                console.error('Error clearing ticker:', error);
+                alert('Error clearing ticker: ' + error.message);
+            }
+        }
+
+        function addTickerAnnouncement(message) {
+            try {
+                const textarea = document.getElementById('ticker-announcements');
+                if (!textarea) {
+                    console.error('Ticker textarea not found');
+                    return;
+                }
+                
+                const current = textarea.value.trim();
+                textarea.value = current + (current ? '\n' : '') + message;
+            } catch (error) {
+                console.error('Error adding ticker announcement:', error);
+            }
+        }
+
+        let selectedGameId = null;
+
+        function selectGame() {
+            const selectEl = document.getElementById('game-select');
+            selectedGameId = selectEl.value;
+            if (selectedGameId) {
+                socket.emit('game-select', { gameId: selectedGameId });
+            }
+        }
+
+        function startGame() {
+            const selectEl = document.getElementById('game-select');
+            const gameId = selectEl.value || selectedGameId;
+            if (!gameId) {
+                alert('Please select a game first');
+                return;
+            }
+            socket.emit('game-start', { gameId: gameId });
+        }
+
+        function stopGame() {
+            socket.emit('game-stop');
+        }
+
+        function toggleGameWindow() {
+            socket.emit('game-window-toggle');
+        }
+
+        // Listen for game list updates
+        socket.on('game-list-update', (data) => {
+            const selectEl = document.getElementById('game-select');
+            if (!selectEl) return;
+            
+            selectEl.innerHTML = '';
+            
+            if (data.games && data.games.length > 0) {
+                data.games.forEach(game => {
+                    const option = document.createElement('option');
+                    option.value = game.id;
+                    option.textContent = `${game.name} (${game.questionCount} questions)`;
+                    if (data.selectedGame === game.id) {
+                        option.selected = true;
+                        selectedGameId = game.id;
+                    }
+                    selectEl.appendChild(option);
+                });
+            } else {
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = 'No games available';
+                selectEl.appendChild(option);
+            }
+        });
+
+        // Listen for player updates
+        socket.on('game-players-update', (data) => {
+            const playerCountEl = document.getElementById('player-count');
+            const playerListEl = document.getElementById('player-list');
+            
+            if (playerCountEl) {
+                playerCountEl.textContent = data.totalPlayers;
+            }
+            
+            if (playerListEl) {
+                if (data.players && data.players.length > 0) {
+                    playerListEl.innerHTML = '';
+                    data.players.forEach((playerName, index) => {
+                        const playerItem = document.createElement('div');
+                        playerItem.style.cssText = 'padding: 8px 12px; margin: 4px 0; background: rgba(45, 45, 45, 0.6); border-radius: 4px; color: #d4d4d4; font-size: 0.9rem;';
+                        playerItem.textContent = `${index + 1}. ${playerName}`;
+                        playerListEl.appendChild(playerItem);
+                    });
+                } else {
+                    playerListEl.innerHTML = '<div style="color: #858585; font-size: 0.9rem; padding: 8px;">No players connected</div>';
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

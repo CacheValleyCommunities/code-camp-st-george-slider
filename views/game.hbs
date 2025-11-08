@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeCamp Quiz - Join Game</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        body {
+            font-family: 'Fira Code', 'Courier New', monospace;
+            background: #1a1a1a;
+            background-image: url('/9nlGN0.gif');
+            background-size: cover;
+            background-repeat: repeat;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: rgba(45, 45, 45, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        h1 {
+            color: #569cd6;
+            margin-bottom: 10px;
+            font-size: 2rem;
+        }
+
+        .user-id-display {
+            background: rgba(30, 30, 30, 0.8);
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+            border-left: 4px solid #569cd6;
+        }
+
+        .user-id-label {
+            color: #858585;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+
+        .user-id-value {
+            color: #d4d4d4;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .status-message {
+            padding: 15px;
+            background: rgba(86, 156, 214, 0.2);
+            border-radius: 6px;
+            margin: 20px 0;
+            color: #569cd6;
+            text-align: center;
+        }
+
+        .question-container {
+            margin: 30px 0;
+        }
+
+        .question-text {
+            color: #d4d4d4;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .countdown-display {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #ffbd2e;
+            text-align: center;
+            margin: 20px 0;
+            font-family: 'Fira Code', 'Courier New', monospace;
+        }
+
+        .answers-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .answer-button {
+            padding: 16px;
+            background: rgba(30, 30, 30, 0.8);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            color: #d4d4d4;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            font-family: 'Fira Code', 'Courier New', monospace;
+        }
+
+        .answer-button:hover {
+            background: rgba(86, 156, 214, 0.2);
+            border-color: #569cd6;
+        }
+
+        .answer-button.selected {
+            background: rgba(86, 156, 214, 0.3);
+            border-color: #569cd6;
+            color: #569cd6;
+        }
+
+        .answer-button.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .answer-button.correct {
+            background: rgba(39, 201, 63, 0.3);
+            border-color: #27c93f;
+            color: #27c93f;
+        }
+
+        .answer-button.incorrect {
+            background: rgba(255, 95, 86, 0.3);
+            border-color: #ff5f56;
+            color: #ff5f56;
+        }
+
+        .score-display {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 1.3rem;
+            color: #27c93f;
+            font-weight: 600;
+        }
+
+        /* Mobile Responsive Styles */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+                align-items: flex-start;
+                padding-top: 20px;
+            }
+
+            .game-container {
+                padding: 20px;
+                max-width: 100%;
+                border-radius: 8px;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+                margin-bottom: 15px;
+            }
+
+            .user-id-display {
+                padding: 12px;
+                margin: 15px 0;
+            }
+
+            .user-id-value {
+                font-size: 1rem;
+            }
+
+            .status-message {
+                padding: 12px;
+                font-size: 14px;
+                margin: 15px 0;
+            }
+
+            .question-text {
+                font-size: 1.2rem;
+                margin-bottom: 15px;
+            }
+
+            .countdown-display {
+                font-size: 2rem;
+                margin: 15px 0;
+            }
+
+            .answer-button {
+                padding: 14px;
+                font-size: 16px; /* Larger for easier tapping */
+                min-height: 50px; /* Minimum touch target size */
+                text-align: left;
+            }
+
+            .score-display {
+                font-size: 1.1rem;
+                margin: 15px 0;
+            }
+
+            .user-id-label {
+                font-size: 0.85rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 8px;
+                padding-top: 15px;
+            }
+
+            .game-container {
+                padding: 15px;
+            }
+
+            h1 {
+                font-size: 1.3rem;
+            }
+
+            .question-text {
+                font-size: 1.1rem;
+            }
+
+            .countdown-display {
+                font-size: 1.8rem;
+            }
+
+            .answer-button {
+                padding: 12px;
+                font-size: 15px;
+                min-height: 48px;
+            }
+
+            .user-id-display {
+                padding: 10px;
+            }
+
+            .user-id-value {
+                font-size: 0.95rem;
+            }
+        }
+
+        /* Landscape orientation adjustments for mobile */
+        @media (max-width: 768px) and (orientation: landscape) {
+            body {
+                align-items: center;
+                padding: 10px;
+            }
+
+            .game-container {
+                max-width: 90%;
+                padding: 20px;
+            }
+
+            .countdown-display {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="game-container">
+        <h1>CodeCamp Quiz</h1>
+        <div class="user-id-display">
+            <div class="user-id-label">Your Player ID:</div>
+            <div class="user-id-value" id="user-id">Loading...</div>
+        </div>
+        <div class="status-message" id="status-message">Waiting for game to start...</div>
+        <div class="score-display" id="score-display" style="display: none;">
+            Your Score: <span id="score-value">0</span> points
+        </div>
+        <div class="question-container" id="question-container" style="display: none;">
+            <div class="question-text" id="question-text"></div>
+            <div class="countdown-display" id="countdown-display">30</div>
+            <div class="answers-grid" id="answers-grid"></div>
+        </div>
+    </div>
+
+    <script src="/js/game-data.js"></script>
+    <script>
+        const socket = io();
+        let sessionToken = null;
+        let userName = null;
+        let currentScore = 0;
+        let currentQuestion = null;
+        let selectedAnswer = null;
+        let countdownInterval = null;
+
+        // Retrieve or get session token from server
+        function getSessionToken() {
+            return localStorage.getItem('game-session-token');
+        }
+
+        function saveSessionToken(token) {
+            localStorage.setItem('game-session-token', token);
+        }
+
+        // Get stored session token
+        sessionToken = getSessionToken();
+
+        // Join game with existing token (or null if new)
+        socket.emit('game-join', { sessionToken: sessionToken });
+
+        socket.on('game-joined', (data) => {
+            // Server assigns session token and user name
+            sessionToken = data.sessionToken;
+            userName = data.userName;
+            
+            // Save token for reconnection
+            saveSessionToken(sessionToken);
+            
+            // Update UI
+            document.getElementById('user-id').textContent = userName;
+            document.getElementById('status-message').textContent = 'Joined game! Waiting for questions...';
+        });
+
+        socket.on('game-question', (data) => {
+            currentQuestion = data;
+            selectedAnswer = null;
+            document.getElementById('status-message').style.display = 'none';
+            document.getElementById('question-container').style.display = 'block';
+            document.getElementById('score-display').style.display = 'block';
+
+            document.getElementById('question-text').textContent = data.question;
+
+            const answersGrid = document.getElementById('answers-grid');
+            answersGrid.innerHTML = '';
+
+            data.answers.forEach((answer, index) => {
+                const button = document.createElement('button');
+                button.className = 'answer-button';
+                button.textContent = answer.text;
+                button.onclick = () => selectAnswer(index);
+                answersGrid.appendChild(button);
+            });
+
+            startCountdown(data.timeLeft || 30);
+        });
+
+        socket.on('game-answer-result', (data) => {
+            const buttons = document.querySelectorAll('.answer-button');
+            buttons.forEach((btn, index) => {
+                btn.classList.add('disabled');
+                if (data.correct && index === selectedAnswer) {
+                    btn.classList.add('correct');
+                    currentScore += data.points || 0;
+                    // Show points earned on the button
+                    if (data.points > 0) {
+                        btn.textContent += ` (+${data.points} pts)`;
+                    }
+                } else if (!data.correct && index === selectedAnswer) {
+                    btn.classList.add('incorrect');
+                } else if (currentQuestion.answers[index].correct) {
+                    btn.classList.add('correct');
+                }
+            });
+
+            document.getElementById('score-value').textContent = currentScore;
+
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
+        });
+
+        socket.on('game-end', (data) => {
+            document.getElementById('question-container').style.display = 'none';
+            document.getElementById('status-message').style.display = 'block';
+            document.getElementById('status-message').textContent = `Game Over! Your final score: ${currentScore} points`;
+        });
+
+        function selectAnswer(index) {
+            if (selectedAnswer !== null) return;
+            if (!sessionToken) {
+                console.error('No session token available');
+                return;
+            }
+            
+            selectedAnswer = index;
+            const buttons = document.querySelectorAll('.answer-button');
+            buttons.forEach((btn, i) => {
+                if (i === index) {
+                    btn.classList.add('selected');
+                } else {
+                    btn.classList.add('disabled');
+                }
+            });
+
+            socket.emit('game-answer', {
+                sessionToken: sessionToken,
+                questionId: currentQuestion.id,
+                answerIndex: index
+            });
+        }
+
+        function startCountdown(seconds) {
+            const countdownEl = document.getElementById('countdown-display');
+            let timeLeft = seconds;
+            countdownEl.textContent = timeLeft;
+
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
+
+            countdownInterval = setInterval(() => {
+                timeLeft--;
+                countdownEl.textContent = timeLeft;
+
+                if (timeLeft <= 0) {
+                    clearInterval(countdownInterval);
+                    if (selectedAnswer === null) {
+                        // Auto-submit if no answer selected
+                        selectAnswer(0);
+                    }
+                }
+            }, 1000);
+        }
+    </script>
+</body>
+
+</html>

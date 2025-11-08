@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeCamp Sponsors</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+
+<body>
+    <!-- Top bar -->
+    <div class="top-bar">
+        <div class="top-bar-left">
+            <div class="menu-item">CodeCamp 2025: Bring Your Genius</div>
+            <div class="menu-item">WIFI - CodeCamp2025 / CodeCamp2025-Guest</div>
+            <div class="menu-item">sponsors.sh</div>
+        </div>
+        <div class="announcements-ticker-container">
+            <div class="announcements-ticker" id="announcements-ticker">
+                <div class="ticker-content" id="ticker-content">
+                    <span class="ticker-item">Welcome to CodeCamp 2025!</span>
+                    <span class="ticker-separator">•</span>
+                    <span class="ticker-item">Join the game at /game</span>
+                    <span class="ticker-separator">•</span>
+                    <span class="ticker-item">Follow us on social media #CodeCamp2025</span>
+                </div>
+            </div>
+        </div>
+        <div class="top-bar-center" id="taskbar">
+            <!-- Minimized windows will appear here -->
+        </div>
+        <div class="top-bar-right">
+            <div class="system-status">
+                <span>📶</span>
+                <span>WiFi</span>
+            </div>
+            <div class="system-status">
+                <span>🔋</span>
+                <span>100%</span>
+            </div>
+            <div class="system-status">
+                <span>🔊</span>
+                <span>50%</span>
+            </div>
+            <div class="clock" id="clock"></div>
+        </div>
+    </div>
+
+    <!-- Desktop Icons -->
+    <div class="desktop-icons">
+        <div class="desktop-icon" id="icon-image-viewer" data-window="image-window">
+            <div class="icon-image">🖼️</div>
+            <div class="icon-label">Sponsor Logos</div>
+        </div>
+        <div class="desktop-icon" id="icon-countdown" data-window="countdown-window">
+            <div class="icon-image">⏱️</div>
+            <div class="icon-label">Countdown</div>
+        </div>
+    </div>
+
+    <!-- Tiling Window Manager Container -->
+    <div class="tiling-container">
+        <!-- Main Content Area: Media Window and Image Viewer -->
+        <div class="tiling-main">
+            <!-- Media Window (Video/Text/Image) -->
+            <div class="media-window hidden" id="media-window">
+                <div class="media-window-bar">
+                    <div class="media-window-title">
+                        <span>◆</span>
+                        <span>media-player</span>
+                        <span class="mode-indicator" id="mode-indicator">[OFFLINE]</span>
+                    </div>
+                    <div class="window-controls">
+                        <div class="window-button minimize"></div>
+                        <div class="window-button maximize"></div>
+                        <div class="window-button close"></div>
+                    </div>
+                </div>
+                <div class="media-content">
+                    <video id="media-video" controls autoplay loop muted>
+                        <source src="" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                    <iframe id="media-youtube" 
+                        frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowfullscreen
+                        style="display: none;"></iframe>
+                    <img id="media-image" src="" alt="Display Image">
+                    <div class="text-content" id="media-text">
+                        <h2>CodeCamp Sponsors 2025</h2>
+                        <p>Our sponsors make this possible. Please support them!</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Image Viewer (Sponsor Logos) -->
+            <div class="image-window">
+                <div class="image-window-bar">
+                    <div class="image-window-title">
+                        <span>◆</span>
+                        <span>sponsor-logos</span>
+                    </div>
+                    <div class="window-controls">
+                        <div class="window-button minimize"></div>
+                        <div class="window-button maximize"></div>
+                        <div class="window-button close"></div>
+                    </div>
+                </div>
+                <div class="image-window-content">
+                    <img id="display-image" src="" alt="Sponsor Logo" style="display: none;">
+                    <div id="image-placeholder" style="color: #858585; font-size: 12px; opacity: 0.6;">No sponsor logo loaded</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Window -->
+        <div class="game-window hidden" id="game-window">
+            <div class="game-window-bar">
+                <div class="game-window-title">
+                    <span>◆</span>
+                    <span>codecamp-quiz</span>
+                </div>
+                <div class="window-controls">
+                    <div class="window-button minimize"></div>
+                    <div class="window-button maximize"></div>
+                    <div class="window-button close"></div>
+                </div>
+            </div>
+            <div class="game-window-content">
+                <div class="game-waiting" id="game-waiting">
+                    <h2>Waiting for game to start...</h2>
+                    <p>Join the game at /game to participate!</p>
+                </div>
+                <div class="game-active hidden" id="game-active">
+                    <div class="game-question-section">
+                        <div class="game-question-number" id="game-question-number">Question 1 of 10</div>
+                        <div class="game-question-text" id="game-question-text">Loading question...</div>
+                        <div class="game-countdown hidden" id="game-countdown">30</div>
+                    </div>
+                    <div class="game-answers" id="game-answers">
+                        <!-- Answers will be populated here -->
+                    </div>
+                </div>
+                <div class="game-leaderboard hidden" id="game-leaderboard">
+                    <h2>Final Leaderboard</h2>
+                    <div class="leaderboard-list" id="leaderboard-list">
+                        <!-- Leaderboard will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom: Countdown window -->
+        <div class="countdown-window">
+            <div class="countdown-window-bar">
+                <div class="countdown-window-title">
+                    <span>◆</span>
+                    <span>countdown-timer</span>
+                </div>
+                <div class="window-controls">
+                    <div class="window-button minimize"></div>
+                    <div class="window-button maximize"></div>
+                    <div class="window-button close"></div>
+                </div>
+            </div>
+            <div class="countdown-window-content">
+                <div class="countdown-time" id="countdown-time">00:00</div>
+                <div class="countdown-label" id="countdown-label">Next Sponsor</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Container -->
+    <div class="notifications-container" id="notifications-container"></div>
+
+    <script>
+        // Inject sponsor data from server
+        window.SPONSORS_DATA = {{{json sponsors}}};
+        // Inject event dates from server
+        window.EVENT_DATES = {{{json eventDates}}};
+    </script>
+    <script src="/js/script.js"></script>
+</body>
+
+</html>
