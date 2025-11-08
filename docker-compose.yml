@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: code-camp-slider-2025
+    ports:
+      - "3000:80"  # Map host port 3000 to container port 80
+    environment:
+      - PORT=80
+      - NODE_ENV=production
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:80', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    # Uncomment below for development with volume mounts
+    # volumes:
+    #   - ./views:/app/views
+    #   - ./public:/app/public
+    #   - ./logos:/app/logos
+    #   - ./server.js:/app/server.js
+
