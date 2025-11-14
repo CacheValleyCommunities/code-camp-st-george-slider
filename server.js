@@ -1,6 +1,7 @@
 const express = require('express');
 const exphbs = require('express-handlebars');
 const http = require('http');
+const https = require('https');
 const { Server } = require('socket.io');
 const fs = require('fs');
 const path = require('path');
@@ -302,6 +303,58 @@ try {
     console.log(`Using fallback: ${gameData.games.length} game(s)`);
 }
 
+// Function to extract YouTube video ID from URL
+function extractYouTubeId(url) {
+    if (!url) return null;
+    
+    const patterns = [
+        /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
+        /youtube\.com\/watch\?.*v=([^&\n?#]+)/
+    ];
+    
+    for (const pattern of patterns) {
+        const match = url.match(pattern);
+        if (match && match[1]) {
+            return match[1];
+        }
+    }
+    
+    return null;
+}
+
+// Function to fetch YouTube video title using oEmbed API
+function getYouTubeVideoTitle(url) {
+    return new Promise((resolve, reject) => {
+        const videoId = extractYouTubeId(url);
+        if (!videoId) {
+            reject(new Error('Invalid YouTube URL'));
+            return;
+        }
+        
+        // Use oEmbed API to get video info
+        const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`;
+        
+        https.get(oembedUrl, (res) => {
+            let data = '';
+            
+            res.on('data', (chunk) => {
+                data += chunk;
+            });
+            
+            res.on('end', () => {
+                try {
+                    const json = JSON.parse(data);
+                    resolve(json.title || 'Unknown Title');
+                } catch (error) {
+                    reject(new Error('Failed to parse YouTube response'));
+                }
+            });
+        }).on('error', (error) => {
+            reject(error);
+        });
+    });
+}
+
 // WebSocket connection handling
 io.on('connection', (socket) => {
     console.log('Client connected:', socket.id);
@@ -378,9 +431,30 @@ io.on('connection', (socket) => {
         console.log('Ticker updated:', data.announcements);
     });
 
-    socket.on('youtube-audio', (data) => {
+    socket.on('youtube-audio', async (data) => {
         // This is an admin panel action, mark socket as admin
         gameState.adminSockets.add(socket.id);
+        
+        // If playing, fetch video title and send notification
+        if (data.action === 'play' && data.url) {
+            try {
+                const videoTitle = await getYouTubeVideoTitle(data.url);
+                if (videoTitle) {
+                    // Send notification to all display screens
+                    io.to('display').emit('notification', {
+                        type: 'info',
+                        title: 'Now Playing',
+                        message: videoTitle,
+                        id: `youtube-audio-${Date.now()}`,
+                        autoDismiss: 5000 // Auto-dismiss after 5 seconds
+                    });
+                    console.log('YouTube audio playing:', videoTitle);
+                }
+            } catch (error) {
+                console.error('Error fetching YouTube video title:', error);
+                // Still send the audio command even if title fetch fails
+            }
+        }
         
         // Broadcast YouTube audio commands to all display screens
         io.to('display').emit('youtube-audio', data);
