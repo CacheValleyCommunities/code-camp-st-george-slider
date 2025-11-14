@@ -64,6 +64,27 @@ The application will be available at `http://localhost:3000`
 
 ### Docker Deployment
 
+#### Using Docker Compose (Recommended)
+
+1. Start the application:
+```bash
+docker-compose up -d
+```
+
+2. View logs:
+```bash
+docker-compose logs -f
+```
+
+3. Stop the application:
+```bash
+docker-compose down
+```
+
+The application will be available at `http://localhost:3000`
+
+#### Using Docker Directly
+
 1. Build the Docker image:
 ```bash
 docker build -t code-camp-slider-2025 .
@@ -75,6 +96,13 @@ docker run -p 8080:80 code-camp-slider-2025
 ```
 
 The application will be available at `http://localhost:8080`
+
+#### Development with Docker Compose
+
+For development with volume mounts (hot-reload):
+```bash
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+```
 
 ### Environment Variables
 

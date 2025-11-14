@@ -25,6 +25,7 @@ app.set('views', path.join(__dirname, 'views'));
 
 // Serve static files
 app.use(express.static(__dirname));
+app.use('/images', express.static(path.join(__dirname, 'public/images')));
 app.use('/css', express.static(path.join(__dirname, 'public/css')));
 app.use('/js', express.static(path.join(__dirname, 'public/js')));
 
@@ -76,9 +77,9 @@ app.get('/', (req, res) => {
     // Event dates - update these with actual event dates
     // Using ISO strings so they can be serialized to JSON
     const eventDates = {
-        start: '2025-01-15T09:00:00', // Code Camp start date/time
-        dayCampEnd: '2025-01-15T17:00:00', // Day Camp end date/time
-        camp24End: '2025-01-16T09:00:00' // 24 HR Camp end date/time
+        start: '2025-11-14T08:00:00', // Code Camp start date/time
+        dayCampEnd: '2025-11-14T17:00:00', // Day Camp end date/time
+        camp24End: '2025-11-15T08:00:00' // 24 HR Camp end date/time
     };
     res.render('index', { sponsors, eventDates });
 });

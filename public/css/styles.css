@@ -15,16 +15,31 @@ body {
     display: flex;
     flex-direction: column;
     position: relative;
+    font-size: 1.5rem; /* Base font size for projector */
+}
+
+#game-link {
+    font-weight: 600;
+    color: #569cd6;
+}
+
+.game-image {
+    max-width: 400px;
+    width: 100%;
+    height: auto;
+    margin-top: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
 }
 
 /* Desktop Icons */
 .desktop-icons {
     position: absolute;
-    top: 36px;
-    left: 16px;
+    top: 56px;
+    left: 24px;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 24px;
     z-index: 1;
     pointer-events: none;
 }
@@ -33,9 +48,9 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
-    width: 80px;
-    padding: 12px 8px;
+    gap: 12px;
+    width: 120px;
+    padding: 16px 12px;
     cursor: pointer;
     border-radius: 6px;
     transition: all 0.2s;
@@ -54,14 +69,14 @@ body {
 }
 
 .icon-image {
-    font-size: 48px;
+    font-size: 64px;
     line-height: 1;
     filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
 }
 
 .icon-label {
     color: #d4d4d4;
-    font-size: 11px;
+    font-size: 1.5rem;
     text-align: center;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
     font-weight: 500;
@@ -75,7 +90,7 @@ body {
     grid-template-rows: 1fr auto;
     gap: 8px;
     padding: 8px;
-    height: calc(100vh - 28px - 1rem);
+    height: calc(100vh - 48px - 1rem);
     overflow: hidden;
     position: relative;
 }
@@ -121,14 +136,14 @@ body {
 .top-bar {
     background: rgba(45, 45, 45, 0.95);
     backdrop-filter: blur(10px);
-    height: 28px;
+    height: 48px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 12px;
+    padding: 0 20px;
     border-bottom: 1px solid rgba(0, 0, 0, 0.3);
     color: #d4d4d4;
-    font-size: 12px;
+    font-size: 1.5rem;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
@@ -169,14 +184,14 @@ body {
 
 .ticker-item {
     color: #d4d4d4;
-    font-size: 12px;
-    padding: 0 10px;
+    font-size: 1.5rem;
+    padding: 0 20px;
     display: inline-block;
 }
 
 .ticker-separator {
     color: #858585;
-    font-size: 10px;
+    font-size: 1.5rem;
     opacity: 0.5;
 }
 
@@ -228,11 +243,11 @@ body {
 }
 
 .taskbar-item {
-    padding: 4px 12px;
+    padding: 8px 20px;
     background: rgba(255, 255, 255, 0.1);
     border-radius: 4px;
     cursor: pointer;
-    font-size: 11px;
+    font-size: 1.5rem;
     color: #d4d4d4;
     transition: all 0.2s;
     white-space: nowrap;
@@ -253,19 +268,19 @@ body {
 /* Notifications */
 .notifications-container {
     position: fixed;
-    top: 36px;
-    right: 16px;
+    top: 56px;
+    right: 24px;
     z-index: 10001;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 16px;
     pointer-events: none;
 }
 
 .notification {
-    min-width: 300px;
-    max-width: 400px;
-    padding: 16px 20px;
+    min-width: 400px;
+    max-width: 600px;
+    padding: 24px 30px;
     background: rgba(45, 45, 45, 0.95);
     backdrop-filter: blur(10px);
     border-radius: 8px;
@@ -273,7 +288,7 @@ body {
     border-left: 4px solid;
     display: flex;
     align-items: flex-start;
-    gap: 12px;
+    gap: 16px;
     pointer-events: all;
     animation: slideInRight 0.3s ease-out;
     position: relative;
@@ -297,7 +312,7 @@ body {
 }
 
 .notification-icon {
-    font-size: 20px;
+    font-size: 2rem;
     line-height: 1;
     flex-shrink: 0;
 }
@@ -324,14 +339,14 @@ body {
 }
 
 .notification-title {
-    font-size: 14px;
+    font-size: 1.75rem;
     font-weight: 600;
     color: #d4d4d4;
-    margin-bottom: 4px;
+    margin-bottom: 8px;
 }
 
 .notification-message {
-    font-size: 12px;
+    font-size: 1.5rem;
     color: #858585;
     line-height: 1.4;
     word-wrap: break-word;
@@ -339,15 +354,15 @@ body {
 
 .notification-close {
     position: absolute;
-    top: 8px;
-    right: 8px;
-    width: 20px;
-    height: 20px;
+    top: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
     border: none;
     background: transparent;
     color: #858585;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 1.75rem;
     line-height: 1;
     display: flex;
     align-items: center;
@@ -398,8 +413,8 @@ body {
 .system-status {
     display: flex;
     align-items: center;
-    gap: 6px;
-    font-size: 11px;
+    gap: 8px;
+    font-size: 1.5rem;
 }
 
 .menu-item {
@@ -439,8 +454,8 @@ body {
 }
 
 .window-bar .mode-indicator {
-    margin-left: 12px;
-    font-size: 10px;
+    margin-left: 16px;
+    font-size: 1.5rem;
     color: #858585;
     text-transform: uppercase;
     letter-spacing: 1px;
@@ -450,21 +465,21 @@ body {
 .window-bar {
     background: linear-gradient(to bottom, rgba(61, 61, 61, 0.9) 0%, rgba(45, 45, 45, 0.9) 100%);
     backdrop-filter: blur(10px);
-    height: 32px;
+    height: 48px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 12px;
+    padding: 0 20px;
     border-bottom: 1px solid rgba(0, 0, 0, 0.3);
 }
 
 .window-title {
     color: #d4d4d4;
-    font-size: 12px;
+    font-size: 1.5rem;
     font-weight: 500;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
 }
 
 .window-controls {
@@ -473,8 +488,8 @@ body {
 }
 
 .window-button {
-    width: 11px;
-    height: 11px;
+    width: 18px;
+    height: 18px;
     border-radius: 3px;
     border: 1px solid rgba(0, 0, 0, 0.2);
     cursor: pointer;
@@ -508,7 +523,7 @@ body {
     flex: 1;
     display: flex;
     flex-direction: column;
-    padding: 40px 30px 30px;
+    padding: 60px 50px 50px;
     background: rgba(37, 37, 37, 0.5);
     backdrop-filter: blur(10px);
 }
@@ -531,8 +546,8 @@ body {
 }
 
 .media-window.collapsed {
-    min-height: 32px;
-    height: 32px;
+    min-height: 48px;
+    height: 48px;
 }
 
 .media-window.expanded {
@@ -561,12 +576,12 @@ body {
 .image-window.fullscreen,
 .countdown-window.fullscreen {
     position: fixed !important;
-    top: 28px !important;
+    top: 48px !important;
     left: 0 !important;
     right: 0 !important;
     bottom: 0 !important;
     width: 100vw !important;
-    height: calc(100vh - 28px) !important;
+    height: calc(100vh - 48px) !important;
     z-index: 10000 !important;
     margin: 0 !important;
     border-radius: 0 !important;
@@ -575,22 +590,22 @@ body {
 .media-window-bar {
     background: linear-gradient(to bottom, rgba(61, 61, 61, 0.9) 0%, rgba(45, 45, 45, 0.9) 100%);
     backdrop-filter: blur(10px);
-    height: 32px;
+    height: 48px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 12px;
+    padding: 0 20px;
     border-bottom: 1px solid rgba(0, 0, 0, 0.3);
     cursor: pointer;
 }
 
 .media-window-title {
     color: #d4d4d4;
-    font-size: 12px;
+    font-size: 1.5rem;
     font-weight: 500;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
 }
 
 /* Video/Image/Text window content */
@@ -637,7 +652,7 @@ body {
 }
 
 .media-content .text-content {
-    padding: 40px;
+    padding: 60px;
     color: #d4d4d4;
     display: none;
     text-align: center;
@@ -649,13 +664,13 @@ body {
 }
 
 .media-content .text-content h2 {
-    font-size: 2rem;
-    margin-bottom: 20px;
+    font-size: 3.5rem;
+    margin-bottom: 30px;
     color: #569cd6;
 }
 
 .media-content .text-content p {
-    font-size: 1.1rem;
+    font-size: 2rem;
     line-height: 1.6;
     opacity: 0.9;
 }
@@ -669,13 +684,13 @@ body {
 }
 
 .mode-button {
-    padding: 8px 16px;
+    padding: 12px 24px;
     background: rgba(45, 45, 45, 0.8);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 4px;
     color: #d4d4d4;
     cursor: pointer;
-    font-size: 12px;
+    font-size: 1.5rem;
     font-weight: 500;
     transition: all 0.2s;
 }
@@ -693,15 +708,15 @@ body {
 
 h1 {
     color: #d4d4d4;
-    font-size: 2.2rem;
-    margin-bottom: 10px;
+    font-size: 4rem;
+    margin-bottom: 20px;
     font-weight: 600;
 }
 
 .subtitle {
     color: #569cd6;
-    font-size: 1rem;
-    margin-bottom: 40px;
+    font-size: 2rem;
+    margin-bottom: 60px;
     opacity: 0.85;
 }
 
@@ -755,12 +770,12 @@ h1 {
 
 .sponsor-tier {
     color: #569cd6;
-    padding: 5px 12px;
-    font-size: 10px;
+    padding: 8px 20px;
+    font-size: 1.5rem;
     font-weight: 600;
     letter-spacing: 1px;
     border-radius: 3px;
-    margin-bottom: 16px;
+    margin-bottom: 24px;
     text-align: center;
 }
 
@@ -805,7 +820,7 @@ h1 {
 }
 
 .sponsor-name {
-    font-size: 1.7rem;
+    font-size: 3rem;
     font-weight: 600;
     letter-spacing: 1px;
     color: #d4d4d4;
@@ -833,12 +848,12 @@ h1 {
 }
 
 .footer {
-    margin-top: 30px;
+    margin-top: 40px;
     color: #4ec9b0;
-    font-size: 13px;
+    font-size: 1.5rem;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
 }
 
 .footer::before {
@@ -848,10 +863,10 @@ h1 {
 
 .progress-indicator {
     position: absolute;
-    bottom: 16px;
-    right: 16px;
+    bottom: 24px;
+    right: 24px;
     color: #858585;
-    font-size: 11px;
+    font-size: 1.5rem;
 }
 
 /* Image window */
@@ -873,21 +888,21 @@ h1 {
 .image-window-bar {
     background: linear-gradient(to bottom, rgba(61, 61, 61, 0.9) 0%, rgba(45, 45, 45, 0.9) 100%);
     backdrop-filter: blur(10px);
-    height: 32px;
+    height: 48px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 12px;
+    padding: 0 20px;
     border-bottom: 1px solid rgba(0, 0, 0, 0.3);
 }
 
 .image-window-title {
     color: #d4d4d4;
-    font-size: 12px;
+    font-size: 1.5rem;
     font-weight: 500;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
 }
 
 .image-window-content {
@@ -925,21 +940,21 @@ h1 {
 .countdown-window-bar {
     background: linear-gradient(to bottom, rgba(61, 61, 61, 0.9) 0%, rgba(45, 45, 45, 0.9) 100%);
     backdrop-filter: blur(10px);
-    height: 32px;
+    height: 48px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 12px;
+    padding: 0 20px;
     border-bottom: 1px solid rgba(0, 0, 0, 0.3);
 }
 
 .countdown-window-title {
     color: #d4d4d4;
-    font-size: 12px;
+    font-size: 1.5rem;
     font-weight: 500;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
 }
 
 .countdown-window-content {
@@ -954,7 +969,7 @@ h1 {
 }
 
 .countdown-time {
-    font-size: 1.5rem;
+    font-size: 3.5rem;
     font-weight: 600;
     color: #569cd6;
     font-family: 'Fira Code', 'Courier New', monospace;
@@ -962,16 +977,16 @@ h1 {
 }
 
 .countdown-label {
-    font-size: 0.75rem;
+    font-size: 1.5rem;
     color: #858585;
-    margin-top: 5px;
+    margin-top: 10px;
     text-transform: uppercase;
     letter-spacing: 1px;
 }
 
 /* Game Window */
 .game-window {
-    background: rgba(45, 45, 45, 0);
+    background: rgba(45, 45, 45, 0.811);
     backdrop-filter: blur(10px);
     border-radius: 8px;
     overflow: hidden;
@@ -1005,21 +1020,21 @@ h1 {
 .game-window-bar {
     background: linear-gradient(to bottom, rgba(61, 61, 61, 0.9) 0%, rgba(45, 45, 45, 0.9) 100%);
     backdrop-filter: blur(10px);
-    height: 32px;
+    height: 48px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 12px;
+    padding: 0 20px;
     border-bottom: 1px solid rgba(0, 0, 0, 0.3);
 }
 
 .game-window-title {
     color: #d4d4d4;
-    font-size: 12px;
+    font-size: 1.5rem;
     font-weight: 500;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
 }
 
 .game-window-content {
@@ -1050,13 +1065,13 @@ h1 {
 .game-waiting h2,
 .game-leaderboard h2 {
     color: #569cd6;
-    font-size: 2rem;
-    margin-bottom: 20px;
+    font-size: 3.5rem;
+    margin-bottom: 30px;
 }
 
 .game-waiting p {
     color: #858585;
-    font-size: 1.1rem;
+    font-size: 2rem;
 }
 
 .game-question-section {
@@ -1065,26 +1080,26 @@ h1 {
 
 .game-question-number {
     color: #858585;
-    font-size: 0.9rem;
-    margin-bottom: 10px;
+    font-size: 1.5rem;
+    margin-bottom: 15px;
     text-transform: uppercase;
     letter-spacing: 1px;
 }
 
 .game-question-text {
     color: #d4d4d4;
-    font-size: 1.8rem;
+    font-size: 3rem;
     font-weight: 600;
-    margin-bottom: 20px;
+    margin-bottom: 30px;
     line-height: 1.4;
 }
 
 .game-countdown {
-    font-size: 3rem;
+    font-size: 5rem;
     font-weight: 700;
     color: #ffbd2e;
     font-family: 'Fira Code', 'Courier New', monospace;
-    margin: 20px 0;
+    margin: 30px 0;
 }
 
 .game-answers {
@@ -1097,12 +1112,12 @@ h1 {
 }
 
 .game-answer-button {
-    padding: 20px;
+    padding: 30px;
     background: rgba(45, 45, 45, 0.8);
     border: 2px solid rgba(255, 255, 255, 0.1);
     border-radius: 8px;
     color: #d4d4d4;
-    font-size: 1.1rem;
+    font-size: 1.75rem;
     cursor: pointer;
     transition: all 0.2s;
     text-align: center;
@@ -1178,23 +1193,23 @@ h1 {
 }
 
 .leaderboard-rank {
-    font-size: 1.5rem;
+    font-size: 2.5rem;
     font-weight: 700;
     color: #569cd6;
-    min-width: 40px;
+    min-width: 60px;
 }
 
 .leaderboard-name {
     flex: 1;
     text-align: left;
     color: #d4d4d4;
-    font-size: 1.1rem;
+    font-size: 2rem;
     font-weight: 500;
-    margin-left: 20px;
+    margin-left: 30px;
 }
 
 .leaderboard-score {
-    font-size: 1.3rem;
+    font-size: 2.25rem;
     font-weight: 600;
     color: #27c93f;
     font-family: 'Fira Code', 'Courier New', monospace;

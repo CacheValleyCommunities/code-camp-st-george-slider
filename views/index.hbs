@@ -13,18 +13,17 @@
     <!-- Top bar -->
     <div class="top-bar">
         <div class="top-bar-left">
-            <div class="menu-item">CodeCamp 2025: Bring Your Genius</div>
-            <div class="menu-item">WIFI - CodeCamp2025 / CodeCamp2025-Guest</div>
-            <div class="menu-item">sponsors.sh</div>
+            <div class="menu-item">CodeCamp 2025</div>
+            <div class="menu-item">WIFI: CodeCamp2025:password123</div>
         </div>
         <div class="announcements-ticker-container">
             <div class="announcements-ticker" id="announcements-ticker">
                 <div class="ticker-content" id="ticker-content">
                     <span class="ticker-item">Welcome to CodeCamp 2025!</span>
                     <span class="ticker-separator">•</span>
-                    <span class="ticker-item">Join the game at /game</span>
+                    <span class="ticker-item">Bring Your Genius!</span>
                     <span class="ticker-separator">•</span>
-                    <span class="ticker-item">Follow us on social media #CodeCamp2025</span>
+                    <span class="ticker-item">Don't forget the semi-colon! It's important in Python! 😉</span>
                 </div>
             </div>
         </div>
@@ -32,18 +31,6 @@
             <!-- Minimized windows will appear here -->
         </div>
         <div class="top-bar-right">
-            <div class="system-status">
-                <span>📶</span>
-                <span>WiFi</span>
-            </div>
-            <div class="system-status">
-                <span>🔋</span>
-                <span>100%</span>
-            </div>
-            <div class="system-status">
-                <span>🔊</span>
-                <span>50%</span>
-            </div>
             <div class="clock" id="clock"></div>
         </div>
     </div>
@@ -132,7 +119,8 @@
             <div class="game-window-content">
                 <div class="game-waiting" id="game-waiting">
                     <h2>Waiting for game to start...</h2>
-                    <p>Join the game at /game to participate!</p>
+                    <p>Join the game at <span id="game-link"></span> to participate!</p>
+                    <img src="/images/Code%20Camp%20Quiz%20Game-qrcode.png" alt="Game QR Code" class="game-image">
                 </div>
                 <div class="game-active hidden" id="game-active">
                     <div class="game-question-section">

@@ -20,11 +20,14 @@ const socket = io();
 
 // Announcements Ticker
 (function() {
+
+    let gameLink = window.location.origin + '/game';
+    document.getElementById('game-link').textContent = gameLink;
     const tickerContent = document.getElementById('ticker-content');
     let announcements = [
-        'Welcome to CodeCamp 2025!',
-        'Join the game at /game',
-        'Follow us on social media #CodeCamp2025'
+        'Bring Your Genius!',
+        'Don\'t forget the semi-colon! It\'s important in Python! 😉',
+        'Bring Your Genius!',
     ];
 
     function updateTicker() {

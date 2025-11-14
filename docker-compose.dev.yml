@@ -1,0 +1,22 @@
+version: '3.8'
+
+# Development override for docker-compose.yml
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+services:
+  app:
+    build:
+      target: app
+    environment:
+      - NODE_ENV=development
+    volumes:
+      # Mount source code for hot-reload (requires nodemon or similar)
+      - ./server.js:/app/server.js
+      - ./views:/app/views
+      - ./public:/app/public
+      - ./logos:/app/logos
+      - ./pixel-bg.svg:/app/pixel-bg.svg
+      - ./9nlGN0.gif:/app/9nlGN0.gif
+    # Override command for development (uncomment if using nodemon)
+    # command: npx nodemon server.js
+
