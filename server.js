@@ -79,7 +79,7 @@ app.get('/', (req, res) => {
     // Using ISO strings so they can be serialized to JSON
     const eventDates = {
         start: '2025-11-14T08:00:00', // Code Camp start date/time
-        dayCampEnd: '2025-11-14T17:00:00', // Day Camp end date/time
+        dayCampEnd: '2025-11-14T15:00:00', // Day Camp end date/time
         camp24End: '2025-11-15T08:00:00' // 24 HR Camp end date/time
     };
     res.render('index', { sponsors, eventDates });
