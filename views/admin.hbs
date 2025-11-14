@@ -307,6 +307,25 @@
         </div>
 
         <div class="control-section">
+            <h2>YouTube Audio Player</h2>
+            <div class="input-group">
+                <label>YouTube URL:</label>
+                <input type="text" id="youtube-audio-url" placeholder="https://www.youtube.com/watch?v=..." value="">
+            </div>
+            <div class="button-group">
+                <button onclick="playYouTubeAudio()" style="background: rgba(39, 201, 63, 0.2); border-color: #27c93f; color: #27c93f;">Play Audio</button>
+                <button onclick="stopYouTubeAudio()" style="background: rgba(255, 95, 86, 0.2); border-color: #ff5f56; color: #ff5f56;">Stop Audio</button>
+            </div>
+            <div class="input-group" style="margin-top: 12px;">
+                <label>Quick Links:</label>
+                <div class="button-group">
+                    <button onclick="setYouTubeAudio('https://www.youtube.com/watch?v=jfKfPfyJRdk')">Lofi Hip Hop</button>
+                    <button onclick="setYouTubeAudio('https://www.youtube.com/watch?v=5qap5aO4i9A')">Lofi Beats</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="control-section">
             <h2>Notifications</h2>
             <div class="input-group">
                 <label>Notification Type:</label>
@@ -558,6 +577,54 @@
 
         function dismissAllNotifications() {
             socket.emit('dismiss-notification', { id: 'all' });
+        }
+
+        function setYouTubeAudio(url) {
+            const input = document.getElementById('youtube-audio-url');
+            if (input) {
+                input.value = url;
+            }
+        }
+
+        function playYouTubeAudio() {
+            if (!socketConnected && !socket.connected) {
+                alert('Socket not connected. Please wait for connection.');
+                return;
+            }
+
+            const urlInput = document.getElementById('youtube-audio-url');
+            const url = urlInput ? urlInput.value.trim() : '';
+
+            if (!url) {
+                alert('Please enter a YouTube URL');
+                return;
+            }
+
+            // Validate YouTube URL
+            if (!url.includes('youtube.com') && !url.includes('youtu.be')) {
+                alert('Please enter a valid YouTube URL');
+                return;
+            }
+
+            socket.emit('youtube-audio', {
+                action: 'play',
+                url: url
+            });
+
+            console.log('Playing YouTube audio:', url);
+        }
+
+        function stopYouTubeAudio() {
+            if (!socketConnected && !socket.connected) {
+                alert('Socket not connected. Please wait for connection.');
+                return;
+            }
+
+            socket.emit('youtube-audio', {
+                action: 'stop'
+            });
+
+            console.log('Stopping YouTube audio');
         }
 
         function updateTicker() {

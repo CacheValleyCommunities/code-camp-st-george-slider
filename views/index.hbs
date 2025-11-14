@@ -7,6 +7,7 @@
     <title>CodeCamp Sponsors</title>
     <link rel="stylesheet" href="/css/styles.css">
     <script src="/socket.io/socket.io.js"></script>
+    <script src="https://www.youtube.com/iframe_api"></script>
 </head>
 
 <body>
@@ -163,6 +164,15 @@
 
     <!-- Notification Container -->
     <div class="notifications-container" id="notifications-container"></div>
+
+    <!-- Hidden YouTube Audio Player -->
+    <iframe id="youtube-audio-player" 
+        class="youtube-audio-hidden"
+        frameborder="0"
+        allow="autoplay; encrypted-media; autoplay"
+        allowfullscreen
+        style="display: none;">
+    </iframe>
 
     <script>
         // Inject sponsor data from server

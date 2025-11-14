@@ -59,6 +59,7 @@ const mediaYoutube = document.getElementById('media-youtube');
 const mediaImage = document.getElementById('media-image');
 const mediaText = document.getElementById('media-text');
 const modeIndicator = document.getElementById('mode-indicator');
+const youtubeAudioPlayer = document.getElementById('youtube-audio-player');
 
 // Extract YouTube video ID from various URL formats
 function extractYouTubeId(url) {
@@ -1227,5 +1228,68 @@ startEventCountdown();
     setInterval(saveWindowPositions, 5000);
     window.addEventListener('beforeunload', saveWindowPositions);
 })();
+
+// YouTube Audio Player Functions
+function playYouTubeAudio(url) {
+    if (!youtubeAudioPlayer) {
+        console.error('YouTube audio player element not found');
+        return;
+    }
+    
+    console.log('Playing YouTube audio:', url);
+    
+    const videoId = extractYouTubeId(url);
+    if (!videoId) {
+        console.error('Invalid YouTube URL for audio playback:', url);
+        return;
+    }
+    
+    // YouTube embed URL with autoplay and audio-only parameters
+    // Start with mute=1 to ensure autoplay works, then unmute
+    // controls=0 to hide controls, modestbranding=1 for minimal UI
+    const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&modestbranding=1&rel=0&enablejsapi=1&iv_load_policy=3&fs=0`;
+    
+    youtubeAudioPlayer.src = embedUrl;
+    youtubeAudioPlayer.style.display = 'block';
+    
+    console.log('YouTube audio player iframe src set:', embedUrl);
+    
+    // Wait for iframe to load, then try to unmute
+    youtubeAudioPlayer.onload = function() {
+        console.log('YouTube audio player iframe loaded');
+        // Try to unmute after iframe loads
+        setTimeout(() => {
+            try {
+                // Attempt to unmute via postMessage (requires YouTube API)
+                youtubeAudioPlayer.contentWindow.postMessage(JSON.stringify({
+                    event: 'command',
+                    func: 'unMute',
+                    args: ''
+                }), '*');
+                console.log('Sent unmute command to YouTube player');
+            } catch (e) {
+                console.log('Could not unmute YouTube audio automatically:', e);
+            }
+        }, 2000);
+    };
+}
+
+function stopYouTubeAudio() {
+    if (!youtubeAudioPlayer) return;
+    youtubeAudioPlayer.src = '';
+    youtubeAudioPlayer.style.display = 'none';
+}
+
+// Listen for YouTube audio commands from admin
+socket.on('youtube-audio', (data) => {
+    console.log('Received YouTube audio command:', data);
+    if (data.action === 'play' && data.url) {
+        playYouTubeAudio(data.url);
+    } else if (data.action === 'stop') {
+        stopYouTubeAudio();
+    } else {
+        console.warn('Unknown YouTube audio action:', data);
+    }
+});
 
 

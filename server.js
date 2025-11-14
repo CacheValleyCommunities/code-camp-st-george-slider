@@ -314,6 +314,7 @@ io.on('connection', (socket) => {
     
     if (isDisplay) {
         gameState.displaySockets.add(socket.id);
+        socket.join('display'); // Join display room for targeted broadcasts
         console.log('Display screen connected:', socket.id);
     } else if (isAdmin) {
         gameState.adminSockets.add(socket.id);
@@ -375,6 +376,15 @@ io.on('connection', (socket) => {
         // Broadcast ticker update to all clients
         io.emit('ticker-update', data);
         console.log('Ticker updated:', data.announcements);
+    });
+
+    socket.on('youtube-audio', (data) => {
+        // This is an admin panel action, mark socket as admin
+        gameState.adminSockets.add(socket.id);
+        
+        // Broadcast YouTube audio commands to all display screens
+        io.to('display').emit('youtube-audio', data);
+        console.log('YouTube audio command:', data.action, data.url);
     });
 
     // Game handlers

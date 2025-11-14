@@ -32,6 +32,19 @@ body {
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
 }
 
+/* Hidden YouTube Audio Player */
+.youtube-audio-hidden {
+    position: fixed;
+    top: -9999px;
+    left: -9999px;
+    width: 320px;
+    height: 240px;
+    opacity: 0;
+    pointer-events: none;
+    border: none;
+    z-index: -1;
+}
+
 /* Desktop Icons */
 .desktop-icons {
     position: absolute;
