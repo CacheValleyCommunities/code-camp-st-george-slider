@@ -820,7 +820,7 @@ function showLeaderboard() {
     console.log('Showing leaderboard...');
     const players = Array.from(gameState.players.values())
         .sort((a, b) => b.score - a.score)
-        .slice(0, 10)
+        .slice(0, 5)
         .map((player, index) => ({
             rank: index + 1,
             name: player.name,
