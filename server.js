@@ -78,9 +78,9 @@ app.get('/', (req, res) => {
     // Event dates - update these with actual event dates
     // Using ISO strings so they can be serialized to JSON
     const eventDates = {
-        start: '2025-11-14T08:00:00', // Code Camp start date/time
-        dayCampEnd: '2025-11-14T15:00:00', // Day Camp end date/time
-        camp24End: '2025-11-15T08:00:00' // 24 HR Camp end date/time
+        start: '2026-07-10T08:00:00', // Code Camp start date/time
+        dayCampEnd: '2026-07-10T15:00:00', // Day Camp end date/time
+        camp24End: '2026-07-11T18:00:00' // 24 HR Camp end date/time
     };
     res.render('index', { sponsors, eventDates });
 });
@@ -114,11 +114,11 @@ function generateUserName() {
     const colors = ['Red', 'Blue', 'Green', 'Yellow', 'Purple', 'Orange', 'Pink', 'Cyan', 'Magenta', 'Lime', 'Teal', 'Violet'];
     const animals = ['Lion', 'Tiger', 'Bear', 'Eagle', 'Shark', 'Dolphin', 'Wolf', 'Fox', 'Rabbit', 'Deer', 'Hawk', 'Panther'];
     const languages = ['JavaScript', 'Python', 'Java', 'C++', 'Ruby', 'Go', 'Rust', 'Swift', 'Kotlin', 'TypeScript', 'PHP', 'C#'];
-    
+
     const color = colors[Math.floor(Math.random() * colors.length)];
     const animal = animals[Math.floor(Math.random() * animals.length)];
     const language = languages[Math.floor(Math.random() * languages.length)];
-    
+
     return `${color}${animal}${language}`;
 }
 
@@ -132,7 +132,7 @@ let gameData = { games: [] };
 try {
     const gameDataPath = path.join(__dirname, 'public', 'js', 'game-data.js');
     const gameDataContent = fs.readFileSync(gameDataPath, 'utf8');
-    
+
     // Extract gameData object using regex - match from "const gameData = {" to the closing "};" before "if"
     const startMarker = 'const gameData = ';
     const startIdx = gameDataContent.indexOf(startMarker);
@@ -141,11 +141,11 @@ try {
         let inString = false;
         let stringChar = null;
         let i = startIdx + startMarker.length;
-        
+
         // Find the matching closing brace
         for (; i < gameDataContent.length; i++) {
             const char = gameDataContent[i];
-            
+
             if (!inString && (char === '"' || char === "'")) {
                 inString = true;
                 stringChar = char;
@@ -166,11 +166,11 @@ try {
             }
         }
     }
-    
+
     if (!gameData.games || gameData.games.length === 0) {
         throw new Error('No games loaded');
     }
-    
+
     console.log(`Loaded ${gameData.games.length} game(s)`);
     gameData.games.forEach(game => {
         console.log(`  - ${game.name}: ${game.questions.length} questions`);
@@ -186,116 +186,116 @@ try {
                 name: 'CodeCamp Quiz',
                 description: 'Programming and web development quiz',
                 questions: [
-            {
-                id: 1,
-                question: "What does HTML stand for?",
-                answers: [
-                    { text: "HyperText Markup Language", correct: true },
-                    { text: "High Tech Modern Language", correct: false },
-                    { text: "Home Tool Markup Language", correct: false },
-                    { text: "Hyperlink Text Markup Language", correct: false }
-                ],
-                points: 10
-            },
-            {
-                id: 2,
-                question: "Which programming language is known as the 'language of the web'?",
-                answers: [
-                    { text: "Python", correct: false },
-                    { text: "JavaScript", correct: true },
-                    { text: "Java", correct: false },
-                    { text: "C++", correct: false }
-                ],
-                points: 10
-            },
-            {
-                id: 3,
-                question: "What is the correct way to declare a variable in JavaScript?",
-                answers: [
-                    { text: "var myVar = 5;", correct: true },
-                    { text: "variable myVar = 5;", correct: false },
-                    { text: "v myVar = 5;", correct: false },
-                    { text: "declare myVar = 5;", correct: false }
-                ],
-                points: 10
-            },
-            {
-                id: 4,
-                question: "What does CSS stand for?",
-                answers: [
-                    { text: "Computer Style Sheets", correct: false },
-                    { text: "Creative Style Sheets", correct: false },
-                    { text: "Cascading Style Sheets", correct: true },
-                    { text: "Colorful Style Sheets", correct: false }
-                ],
-                points: 10
-            },
-            {
-                id: 5,
-                question: "Which method is used to add an element to the end of an array in JavaScript?",
-                answers: [
-                    { text: "push()", correct: true },
-                    { text: "add()", correct: false },
-                    { text: "append()", correct: false },
-                    { text: "insert()", correct: false }
-                ],
-                points: 10
-            },
-            {
-                id: 6,
-                question: "What is the purpose of Git?",
-                answers: [
-                    { text: "To write code", correct: false },
-                    { text: "To manage code versions", correct: true },
-                    { text: "To compile code", correct: false },
-                    { text: "To debug code", correct: false }
-                ],
-                points: 10
-            },
-            {
-                id: 7,
-                question: "Which HTTP method is used to retrieve data?",
-                answers: [
-                    { text: "POST", correct: false },
-                    { text: "PUT", correct: false },
-                    { text: "GET", correct: true },
-                    { text: "DELETE", correct: false }
-                ],
-                points: 10
-            },
-            {
-                id: 8,
-                question: "What does API stand for?",
-                answers: [
-                    { text: "Application Programming Interface", correct: true },
-                    { text: "Advanced Programming Interface", correct: false },
-                    { text: "Application Program Integration", correct: false },
-                    { text: "Automated Programming Interface", correct: false }
-                ],
-                points: 10
-            },
-            {
-                id: 9,
-                question: "Which symbol is used for comments in JavaScript?",
-                answers: [
-                    { text: "//", correct: true },
-                    { text: "<!-- -->", correct: false },
-                    { text: "#", correct: false },
-                    { text: "/* */", correct: false }
-                ],
-                points: 10
-            },
-            {
-                id: 10,
-                question: "What is the result of: console.log(typeof null)?",
-                answers: [
-                    { text: "null", correct: false },
-                    { text: "undefined", correct: false },
-                    { text: "object", correct: true },
-                    { text: "number", correct: false }
-                ],
-                points: 10
-            }
+                    {
+                        id: 1,
+                        question: "What does HTML stand for?",
+                        answers: [
+                            { text: "HyperText Markup Language", correct: true },
+                            { text: "High Tech Modern Language", correct: false },
+                            { text: "Home Tool Markup Language", correct: false },
+                            { text: "Hyperlink Text Markup Language", correct: false }
+                        ],
+                        points: 10
+                    },
+                    {
+                        id: 2,
+                        question: "Which programming language is known as the 'language of the web'?",
+                        answers: [
+                            { text: "Python", correct: false },
+                            { text: "JavaScript", correct: true },
+                            { text: "Java", correct: false },
+                            { text: "C++", correct: false }
+                        ],
+                        points: 10
+                    },
+                    {
+                        id: 3,
+                        question: "What is the correct way to declare a variable in JavaScript?",
+                        answers: [
+                            { text: "var myVar = 5;", correct: true },
+                            { text: "variable myVar = 5;", correct: false },
+                            { text: "v myVar = 5;", correct: false },
+                            { text: "declare myVar = 5;", correct: false }
+                        ],
+                        points: 10
+                    },
+                    {
+                        id: 4,
+                        question: "What does CSS stand for?",
+                        answers: [
+                            { text: "Computer Style Sheets", correct: false },
+                            { text: "Creative Style Sheets", correct: false },
+                            { text: "Cascading Style Sheets", correct: true },
+                            { text: "Colorful Style Sheets", correct: false }
+                        ],
+                        points: 10
+                    },
+                    {
+                        id: 5,
+                        question: "Which method is used to add an element to the end of an array in JavaScript?",
+                        answers: [
+                            { text: "push()", correct: true },
+                            { text: "add()", correct: false },
+                            { text: "append()", correct: false },
+                            { text: "insert()", correct: false }
+                        ],
+                        points: 10
+                    },
+                    {
+                        id: 6,
+                        question: "What is the purpose of Git?",
+                        answers: [
+                            { text: "To write code", correct: false },
+                            { text: "To manage code versions", correct: true },
+                            { text: "To compile code", correct: false },
+                            { text: "To debug code", correct: false }
+                        ],
+                        points: 10
+                    },
+                    {
+                        id: 7,
+                        question: "Which HTTP method is used to retrieve data?",
+                        answers: [
+                            { text: "POST", correct: false },
+                            { text: "PUT", correct: false },
+                            { text: "GET", correct: true },
+                            { text: "DELETE", correct: false }
+                        ],
+                        points: 10
+                    },
+                    {
+                        id: 8,
+                        question: "What does API stand for?",
+                        answers: [
+                            { text: "Application Programming Interface", correct: true },
+                            { text: "Advanced Programming Interface", correct: false },
+                            { text: "Application Program Integration", correct: false },
+                            { text: "Automated Programming Interface", correct: false }
+                        ],
+                        points: 10
+                    },
+                    {
+                        id: 9,
+                        question: "Which symbol is used for comments in JavaScript?",
+                        answers: [
+                            { text: "//", correct: true },
+                            { text: "<!-- -->", correct: false },
+                            { text: "#", correct: false },
+                            { text: "/* */", correct: false }
+                        ],
+                        points: 10
+                    },
+                    {
+                        id: 10,
+                        question: "What is the result of: console.log(typeof null)?",
+                        answers: [
+                            { text: "null", correct: false },
+                            { text: "undefined", correct: false },
+                            { text: "object", correct: true },
+                            { text: "number", correct: false }
+                        ],
+                        points: 10
+                    }
                 ]
             }
         ]
@@ -306,19 +306,19 @@ try {
 // Function to extract YouTube video ID from URL
 function extractYouTubeId(url) {
     if (!url) return null;
-    
+
     const patterns = [
         /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
         /youtube\.com\/watch\?.*v=([^&\n?#]+)/
     ];
-    
+
     for (const pattern of patterns) {
         const match = url.match(pattern);
         if (match && match[1]) {
             return match[1];
         }
     }
-    
+
     return null;
 }
 
@@ -330,17 +330,17 @@ function getYouTubeVideoTitle(url) {
             reject(new Error('Invalid YouTube URL'));
             return;
         }
-        
+
         // Use oEmbed API to get video info
         const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`;
-        
+
         https.get(oembedUrl, (res) => {
             let data = '';
-            
+
             res.on('data', (chunk) => {
                 data += chunk;
             });
-            
+
             res.on('end', () => {
                 try {
                     const json = JSON.parse(data);
@@ -358,13 +358,13 @@ function getYouTubeVideoTitle(url) {
 // WebSocket connection handling
 io.on('connection', (socket) => {
     console.log('Client connected:', socket.id);
-    
+
     // Check the referer/request headers to identify connection type
     const referer = socket.handshake.headers.referer || '';
     const isAdmin = referer.includes('/admin');
     const isGame = referer.includes('/game');
     const isDisplay = referer.includes('/') && !isAdmin && !isGame; // Main display page
-    
+
     if (isDisplay) {
         gameState.displaySockets.add(socket.id);
         socket.join('display'); // Join display room for targeted broadcasts
@@ -394,7 +394,7 @@ io.on('connection', (socket) => {
     socket.on('media-control', (data) => {
         // This is an admin panel action, mark socket as admin
         gameState.adminSockets.add(socket.id);
-        
+
         // Broadcast to all clients except sender
         socket.broadcast.emit('media-command', data);
         console.log('Media command:', data);
@@ -403,7 +403,7 @@ io.on('connection', (socket) => {
     socket.on('notification', (data) => {
         // This is an admin panel action, mark socket as admin
         gameState.adminSockets.add(socket.id);
-        
+
         // Generate ID if not provided
         if (!data.id) {
             data.id = `notif-${Date.now()}-${socket.id}`;
@@ -416,7 +416,7 @@ io.on('connection', (socket) => {
     socket.on('dismiss-notification', (data) => {
         // This is an admin panel action, mark socket as admin
         gameState.adminSockets.add(socket.id);
-        
+
         // Broadcast dismiss command to all clients except sender
         socket.broadcast.emit('dismiss-notification', data);
         console.log('Dismiss notification:', data);
@@ -425,7 +425,7 @@ io.on('connection', (socket) => {
     socket.on('ticker-update', (data) => {
         // This is an admin panel action, mark socket as admin
         gameState.adminSockets.add(socket.id);
-        
+
         // Broadcast ticker update to all clients
         io.emit('ticker-update', data);
         console.log('Ticker updated:', data.announcements);
@@ -434,7 +434,7 @@ io.on('connection', (socket) => {
     socket.on('youtube-audio', async (data) => {
         // This is an admin panel action, mark socket as admin
         gameState.adminSockets.add(socket.id);
-        
+
         // If playing, fetch video title and send notification
         if (data.action === 'play' && data.url) {
             try {
@@ -455,7 +455,7 @@ io.on('connection', (socket) => {
                 // Still send the audio command even if title fetch fails
             }
         }
-        
+
         // Broadcast YouTube audio commands to all display screens
         io.to('display').emit('youtube-audio', data);
         console.log('YouTube audio command:', data.action, data.url);
@@ -464,22 +464,22 @@ io.on('connection', (socket) => {
     // Game handlers
     socket.on('game-join', (data) => {
         const { sessionToken } = data; // Client may send existing token
-        
+
         // Don't register display screens as players
         if (gameState.displaySockets.has(socket.id)) {
             console.log('Display screen attempted to join as player, ignoring:', socket.id);
             return;
         }
-        
+
         // Don't register admin panels as players
         if (gameState.adminSockets.has(socket.id)) {
             console.log('Admin panel attempted to join as player, ignoring:', socket.id);
             return;
         }
-        
+
         let playerToken = sessionToken;
         let playerName;
-        
+
         // Check if this is a reconnection with existing token
         if (sessionToken && gameState.players.has(sessionToken)) {
             // Reconnecting player - update socket ID
@@ -499,13 +499,13 @@ io.on('connection', (socket) => {
             });
             console.log('New player joined:', playerName, 'Token:', playerToken);
         }
-        
+
         // Send session token and name to client
         socket.emit('game-joined', {
             sessionToken: playerToken,
             userName: playerName
         });
-        
+
         // Send notification when new player joins (only for new players, not reconnects)
         if (!sessionToken || !gameState.players.has(sessionToken)) {
             io.emit('notification', {
@@ -516,7 +516,7 @@ io.on('connection', (socket) => {
                 autoDismiss: 5000 // Auto-dismiss after 5 seconds
             });
         }
-        
+
         // Broadcast updated player count to admin panels only
         broadcastPlayerUpdate();
     });
@@ -524,34 +524,34 @@ io.on('connection', (socket) => {
     socket.on('game-start', (data) => {
         // This is an admin panel action, mark socket as admin
         gameState.adminSockets.add(socket.id);
-        
+
         console.log('Game start requested');
         if (gameState.active) {
             console.log('Game already active');
             return;
         }
-        
+
         const gameId = data?.gameId || gameState.currentGame || (gameData.games.length > 0 ? gameData.games[0].id : null);
-        
+
         if (!gameId) {
             console.error('No game selected');
             socket.emit('game-error', { message: 'No game selected' });
             return;
         }
-        
+
         const selectedGame = gameData.games.find(g => g.id === gameId);
         if (!selectedGame) {
             console.error('Game not found:', gameId);
             socket.emit('game-error', { message: `Game "${gameId}" not found` });
             return;
         }
-        
+
         if (!selectedGame.questions || selectedGame.questions.length === 0) {
             console.error('No questions in selected game');
             socket.emit('game-error', { message: 'Selected game has no questions' });
             return;
         }
-        
+
         gameState.currentGame = gameId;
         console.log(`Starting game: ${selectedGame.name} with ${selectedGame.questions.length} questions`);
         console.log(`Players in game: ${gameState.players.size}`);
@@ -559,19 +559,19 @@ io.on('connection', (socket) => {
         gameState.questionIndex = 0;
         gameState.answers.clear();
         gameState.players.forEach(player => player.score = 0);
-        
+
         // Show game window on all displays
         io.emit('game-command', { action: 'show' });
         console.log('Game window shown, starting first question');
-        
+
         // Start first question
         startNextQuestion();
     });
-    
+
     socket.on('game-select', (data) => {
         // This is an admin panel action, mark socket as admin
         gameState.adminSockets.add(socket.id);
-        
+
         const { gameId } = data;
         if (gameId && gameData.games.find(g => g.id === gameId)) {
             gameState.currentGame = gameId;
@@ -583,52 +583,52 @@ io.on('connection', (socket) => {
 
     socket.on('game-answer', (data) => {
         const { sessionToken, questionId, answerIndex } = data;
-        
+
         if (!sessionToken || !gameState.players.has(sessionToken)) {
             console.log('Invalid session token:', sessionToken);
             return;
         }
-        
+
         if (!gameState.active || gameState.answers.has(sessionToken)) {
             return; // Already answered or game not active
         }
 
         const selectedGame = gameData.games.find(g => g.id === gameState.currentGame);
         if (!selectedGame) return;
-        
+
         const question = selectedGame.questions.find(q => q.id === questionId);
         if (!question) return;
 
         const isCorrect = question.answers[answerIndex].correct;
-        
+
         // Calculate points based on time
         let points = 0;
         if (isCorrect) {
             const elapsedSeconds = Math.floor((Date.now() - gameState.startTime) / 1000);
             const basePoints = 50;
-            
+
             // Calculate time penalty
             // Every second: -1 point
             // Every 10 seconds: penalty multiplier increases by 1.5x
             let timePenalty = 0;
             let currentMultiplier = 1.0;
-            
+
             // Calculate penalty for each second
             for (let second = 1; second <= elapsedSeconds; second++) {
                 // Increase multiplier every 10 seconds (at 10, 20, 30, etc.)
                 if (second % 10 === 0 && second > 0) {
                     currentMultiplier *= 1.5;
                 }
-                
+
                 // Apply penalty for this second
                 timePenalty += currentMultiplier;
             }
-            
+
             points = Math.max(0, Math.floor(basePoints - timePenalty));
         }
-        
+
         gameState.answers.set(sessionToken, answerIndex);
-        
+
         const player = gameState.players.get(sessionToken);
         if (player) {
             player.score += points;
@@ -647,7 +647,7 @@ io.on('connection', (socket) => {
     socket.on('game-stop', () => {
         // This is an admin panel action, mark socket as admin
         gameState.adminSockets.add(socket.id);
-        
+
         gameState.active = false;
         // Hide game window
         io.emit('game-command', { action: 'hide' });
@@ -660,30 +660,30 @@ io.on('connection', (socket) => {
     socket.on('game-window-toggle', () => {
         // This is an admin panel action, mark socket as admin
         gameState.adminSockets.add(socket.id);
-        
+
         console.log('Game window toggle requested');
         io.emit('game-window-toggle');
     });
 
     socket.on('disconnect', () => {
         console.log('Client disconnected:', socket.id);
-        
+
         // Remove from admin sockets if it was an admin
         const wasAdmin = gameState.adminSockets.delete(socket.id);
-        
+
         // Remove from display sockets if it was a display
         const wasDisplay = gameState.displaySockets.delete(socket.id);
-        
+
         if (wasDisplay) {
             console.log('Display screen disconnected:', socket.id);
             return; // Don't process as player disconnect
         }
-        
+
         if (wasAdmin) {
             console.log('Admin panel disconnected:', socket.id);
             return; // Don't process as player disconnect
         }
-        
+
         // Check if this was a game player and remove them
         let playerRemoved = false;
         for (const [sessionToken, player] of gameState.players.entries()) {
@@ -696,7 +696,7 @@ io.on('connection', (socket) => {
                 break;
             }
         }
-        
+
         // Broadcast updated player count to admin panels only
         if (playerRemoved) {
             broadcastPlayerUpdate();
@@ -709,15 +709,15 @@ function startNextQuestion() {
         console.error('No game selected');
         return;
     }
-    
+
     const selectedGame = gameData.games.find(g => g.id === gameState.currentGame);
     if (!selectedGame) {
         console.error('Selected game not found');
         return;
     }
-    
+
     console.log(`Starting question ${gameState.questionIndex + 1} of ${selectedGame.questions.length}`);
-    
+
     if (!selectedGame.questions || gameState.questionIndex >= selectedGame.questions.length) {
         // Game over - show leaderboard and wait for admin
         console.log('Game over - no more questions, showing leaderboard');
@@ -732,7 +732,7 @@ function startNextQuestion() {
         console.error(`Question ${gameState.questionIndex} not found`);
         return;
     }
-    
+
     console.log(`Question: ${question.question}`);
     gameState.currentQuestion = question;
     gameState.answers.clear();
@@ -772,9 +772,9 @@ function startNextQuestion() {
 function checkIfAllPlayersAnswered() {
     const totalPlayers = gameState.players.size;
     const answeredPlayers = gameState.answers.size;
-    
+
     console.log(`Players answered: ${answeredPlayers} / ${totalPlayers}`);
-    
+
     if (totalPlayers > 0 && answeredPlayers >= totalPlayers) {
         console.log('All players have answered - moving to next question');
         // Clear the timeout since all players answered
@@ -792,7 +792,7 @@ function checkIfAllPlayersAnswered() {
 function advanceToNextQuestion() {
     showQuestionResults();
     gameState.questionIndex++;
-    
+
     const selectedGame = gameData.games.find(g => g.id === gameState.currentGame);
     if (selectedGame && gameState.questionIndex < selectedGame.questions.length) {
         setTimeout(() => startNextQuestion(), 3000); // 3 second break between questions
@@ -809,7 +809,7 @@ function advanceToNextQuestion() {
 function showQuestionResults() {
     const question = gameState.currentQuestion;
     const correctAnswerIndex = question.answers.findIndex(a => a.correct);
-    
+
     io.emit('game-question-results', {
         correctAnswerIndex,
         answers: gameState.answers
@@ -829,10 +829,10 @@ function showLeaderboard() {
 
     console.log(`Leaderboard: ${players.length} players`);
     console.log('Top players:', players.map(p => `${p.name}: ${p.score}`).join(', '));
-    
+
     // Send leaderboard to all clients (display and players)
     io.emit('game-leaderboard', { players });
-    
+
     // Also send to display screens to show in game window
     io.emit('game-display-leaderboard', { players });
 }
@@ -845,7 +845,7 @@ function broadcastPlayerUpdate() {
             .filter(p => p.socketId !== null) // Only show connected players
             .map(p => p.name)
     };
-    
+
     // Send to all admin sockets
     gameState.adminSockets.forEach(socketId => {
         const adminSocket = io.sockets.sockets.get(socketId);
@@ -853,7 +853,7 @@ function broadcastPlayerUpdate() {
             adminSocket.emit('game-players-update', playerData);
         }
     });
-    
+
     console.log(`Broadcasted player update to ${gameState.adminSockets.size} admin panel(s):`, playerData);
 }
 
@@ -879,14 +879,14 @@ function broadcastGameList() {
         })),
         selectedGame: gameState.currentGame
     };
-    
+
     gameState.adminSockets.forEach(socketId => {
         const adminSocket = io.sockets.sockets.get(socketId);
         if (adminSocket) {
             adminSocket.emit('game-list-update', gameListData);
         }
     });
-    
+
     console.log(`Broadcasted game list to ${gameState.adminSockets.size} admin panel(s)`);
 }
 
