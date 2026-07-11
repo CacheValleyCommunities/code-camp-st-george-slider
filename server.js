@@ -80,7 +80,7 @@ app.get('/', (req, res) => {
     const eventDates = {
         start: '2026-07-10T08:00:00', // Code Camp start date/time
         dayCampEnd: '2026-07-10T15:00:00', // Day Camp end date/time
-        camp24End: '2026-07-11T18:00:00' // 24 HR Camp end date/time
+        camp24End: '2026-07-11T19:00:00' // 24 HR Camp end date/time
     };
     res.render('index', { sponsors, eventDates });
 });
