@@ -52,11 +52,6 @@
     scroll-margin-top: 1.5rem;
 }
 
-.is-focus {
-    outline: 2px solid #5e72e4;
-    outline-offset: 2px;
-}
-
 .player {
     padding: 0.45rem 0.65rem;
     margin: 0.25rem 0;

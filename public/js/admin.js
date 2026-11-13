@@ -273,11 +273,3 @@ document.querySelectorAll("form[data-confirm]").forEach((form) => {
     });
 })();
 
-const section = document.body.dataset.section || "";
-if (section && section !== "display") {
-    const panel = document.getElementById("panel-" + section);
-    if (panel) {
-        panel.classList.add("is-focus");
-        panel.scrollIntoView({ block: "start" });
-    }
-}

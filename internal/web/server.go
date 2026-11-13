@@ -963,19 +963,10 @@ type adminPage struct {
 	Ticker       string
 }
 
-func (p adminPage) ShowPage() bool {
-	switch p.Section {
-	case "display", "game", "video", "image", "text", "audio", "notifications", "players":
-		return true
-	default:
-		return false
-	}
-}
-
 func (p adminPage) Heading() string {
 	switch p.Section {
 	case "display":
-		return "Show"
+		return "Display"
 	case "game":
 		return "Quiz"
 	case "video":
@@ -987,9 +978,9 @@ func (p adminPage) Heading() string {
 	case "audio":
 		return "Audio"
 	case "notifications":
-		return "Notifications"
+		return "Alerts"
 	case "players":
-		return "Players"
+		return "Quiz"
 	case "settings":
 		return "Room"
 	case "logos":
