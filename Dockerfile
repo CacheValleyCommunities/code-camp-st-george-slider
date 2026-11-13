@@ -16,7 +16,6 @@ WORKDIR /app
 COPY --from=build /out/server /app/server
 COPY templates ./templates
 COPY public ./public
-COPY logos ./logos
 COPY pixel-bg.svg 9nlGN0.gif ./
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 
