@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeCamp Sponsors</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="/js/ws.js"></script>
+    <script src="https://www.youtube.com/iframe_api"></script>
+</head>
+
+<body>
+    <svg class="icon-sprite" aria-hidden="true">
+        <symbol id="i-image" viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="10" rx="1" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="5.5" cy="6.5" r="1" fill="currentColor"/><path d="M3.5 12l3-3 2 2 2-2.5 2.5 3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></symbol>
+        <symbol id="i-clock" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 5.5V8l2 1.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+        <symbol id="i-media" viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="10" rx="1" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M7 6.2l3.2 1.8L7 9.8z" fill="currentColor"/></symbol>
+        <symbol id="i-quiz" viewBox="0 0 16 16"><rect x="2.5" y="2.5" width="4.5" height="4.5" rx="0.5" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="9" y="2.5" width="4.5" height="4.5" rx="0.5" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="2.5" y="9" width="4.5" height="4.5" rx="0.5" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="9" y="9" width="4.5" height="4.5" rx="0.5" fill="none" stroke="currentColor" stroke-width="1.5"/></symbol>
+        <symbol id="i-reset" viewBox="0 0 16 16"><path d="M3.2 8a4.8 4.8 0 1 0 1.1-3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M3 3.2V6h2.8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+        <symbol id="i-volume" viewBox="0 0 16 16"><path d="M3 6.5h2.2L8.5 4v8L5.2 9.5H3z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M11 6.2a3 3 0 0 1 0 3.6M12.6 4.6a5 5 0 0 1 0 6.8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+        <symbol id="i-volume-off" viewBox="0 0 16 16"><path d="M3 6.5h2.2L8.5 4v8L5.2 9.5H3z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M11 6.5l3 3M14 6.5l-3 3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+        <symbol id="i-sun" viewBox="0 0 16 16"><circle cx="8" cy="8" r="2.2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 2.5v1.5M8 12v1.5M2.5 8H4M12 8h1.5M4.1 4.1l1 1M10.9 10.9l1 1M11.9 4.1l-1 1M5.1 10.9l-1 1" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+        <symbol id="i-moon" viewBox="0 0 16 16"><path d="M9.2 2.6A5 5 0 1 0 13.4 9 4 4 0 0 1 9.2 2.6z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></symbol>
+        <symbol id="i-full" viewBox="0 0 16 16"><path d="M3 6V3h3M10 3h3v3M13 10v3h-3M6 13H3v-3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+        <symbol id="i-exit" viewBox="0 0 16 16"><path d="M6 3H3v3M13 6V3h-3M10 13h3v-3M3 10v3h3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+        <symbol id="i-float" viewBox="0 0 16 16"><rect x="2" y="5" width="8" height="7" rx="1" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 5V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-1" fill="none" stroke="currentColor" stroke-width="1.5"/></symbol>
+        <symbol id="i-tile" viewBox="0 0 16 16"><rect x="2" y="2" width="5.5" height="5.5" rx="0.5" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="8.5" y="2" width="5.5" height="5.5" rx="0.5" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="2" y="8.5" width="12" height="5.5" rx="0.5" fill="none" stroke="currentColor" stroke-width="1.5"/></symbol>
+        <symbol id="i-min" viewBox="0 0 16 16"><path d="M4 8h8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+        <symbol id="i-max" viewBox="0 0 16 16"><rect x="3.5" y="3.5" width="9" height="9" rx="1" fill="none" stroke="currentColor" stroke-width="1.5"/></symbol>
+        <symbol id="i-restore" viewBox="0 0 16 16"><rect x="5" y="5" width="8" height="8" rx="1" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M10.5 5V3.8a.8.8 0 0 0-.8-.8H3.8a.8.8 0 0 0-.8.8v5.9a.8.8 0 0 0 .8.8H5" fill="none" stroke="currentColor" stroke-width="1.5"/></symbol>
+        <symbol id="i-close" viewBox="0 0 16 16"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+        <symbol id="i-prev" viewBox="0 0 16 16"><path d="M10 4L6 8l4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+        <symbol id="i-next" viewBox="0 0 16 16"><path d="M6 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+        <symbol id="i-pause" viewBox="0 0 16 16"><path d="M6 4.5v7M10 4.5v7" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+        <symbol id="i-play" viewBox="0 0 16 16"><path d="M6.2 4.4v7.2L12 8z" fill="currentColor"/></symbol>
+    </svg>
+
+    <div class="session-gate" id="session-gate" role="dialog" aria-modal="true" aria-labelledby="session-title">
+        <form class="session-card" id="session-form">
+            <h2 id="session-title">Display session</h2>
+            <p id="session-copy">This screen stays on for the event. Allow the browser to keep the display awake, go fullscreen, and play sound.</p>
+            <label class="session-check" id="session-autoplay-row">
+                <input type="checkbox" id="session-autoplay" checked>
+                Autoplay video and audio
+            </label>
+            <div class="session-actions">
+                <button type="submit" class="session-primary" id="session-start">Start display</button>
+                <button type="button" class="session-secondary" id="session-silent">Windowed, silent</button>
+            </div>
+        </form>
+    </div>
+
+    <header class="top-bar">
+        <div class="top-bar-left">
+            <div class="menu-item" id="event-title">{{.EventTitle}}</div>
+            <div class="menu-item" id="wifi-info"{{if not .WifiLabel}} hidden{{end}}>{{.WifiLabel}}</div>
+        </div>
+        <div class="announcements-ticker-container">
+            <div class="announcements-ticker" id="announcements-ticker">
+                <div class="ticker-content" id="ticker-content">
+                    {{range $i, $line := .Announcements}}{{if $i}}<span class="ticker-separator">•</span>{{end}}<span class="ticker-item">{{$line}}</span>{{end}}
+                </div>
+            </div>
+        </div>
+        <div class="top-bar-right">
+            <button type="button" class="bar-button" id="layout-reset" title="Reset layout" aria-label="Reset layout"><svg class="icon" aria-hidden="true"><use href="#i-reset"/></svg></button>
+            <div class="volume-control">
+                <button type="button" class="bar-button" id="volume-mute" aria-pressed="false" aria-label="Mute" title="Mute"><svg class="icon icon-main" aria-hidden="true"><use href="#i-volume"/></svg><svg class="icon icon-alt" aria-hidden="true"><use href="#i-volume-off"/></svg></button>
+                <input id="volume-slider" type="range" min="0" max="100" value="80" aria-label="Volume">
+            </div>
+            <button type="button" class="bar-button" id="wake-status" aria-pressed="false" title="Wake lock released" aria-label="Keep the display awake"><svg class="icon icon-main" aria-hidden="true"><use href="#i-moon"/></svg><svg class="icon icon-alt" aria-hidden="true"><use href="#i-sun"/></svg></button>
+            <button type="button" class="bar-button" id="fullscreen-toggle" aria-pressed="false" title="Fullscreen" aria-label="Fullscreen"><svg class="icon icon-main" aria-hidden="true"><use href="#i-full"/></svg><svg class="icon icon-alt" aria-hidden="true"><use href="#i-exit"/></svg></button>
+            <div class="clock" id="clock"></div>
+        </div>
+    </header>
+
+    <div class="desktop">
+        <nav class="desktop-icons" aria-label="Apps">
+            <button type="button" class="desktop-icon" data-window-id="image-window">
+                <svg class="icon" aria-hidden="true"><use href="#i-image"/></svg>
+                <span>sponsors</span>
+            </button>
+            <button type="button" class="desktop-icon" data-window-id="countdown-window">
+                <svg class="icon" aria-hidden="true"><use href="#i-clock"/></svg>
+                <span>timer</span>
+            </button>
+            <button type="button" class="desktop-icon" data-window-id="media-window">
+                <svg class="icon" aria-hidden="true"><use href="#i-media"/></svg>
+                <span>media</span>
+            </button>
+            <button type="button" class="desktop-icon" data-window-id="game-window">
+                <svg class="icon" aria-hidden="true"><use href="#i-quiz"/></svg>
+                <span>quiz</span>
+            </button>
+        </nav>
+    <div class="tiling-container">
+        <div class="tiling-main">
+            <div class="window media-window hidden" id="media-window" data-window="media-window">
+                <div class="window-bar">
+                    <div class="window-title">
+                        <svg class="icon" aria-hidden="true"><use href="#i-media"/></svg>
+                        <span class="mode-indicator" id="mode-indicator" data-mode="offline" title="Offline"></span>
+                    </div>
+                    <div class="window-controls">
+                        <button type="button" class="window-button" data-action="float" data-state="tiled" title="Float window" aria-label="Float window"><svg class="icon icon-main" aria-hidden="true"><use href="#i-float"/></svg><svg class="icon icon-alt" aria-hidden="true"><use href="#i-tile"/></svg></button>
+                        <button type="button" class="window-button" data-action="minimize" title="Minimize" aria-label="Minimize"><svg class="icon" aria-hidden="true"><use href="#i-min"/></svg></button>
+                        <button type="button" class="window-button" data-action="maximize" data-state="windowed" title="Maximize" aria-label="Maximize"><svg class="icon icon-main" aria-hidden="true"><use href="#i-max"/></svg><svg class="icon icon-alt" aria-hidden="true"><use href="#i-restore"/></svg></button>
+                        <button type="button" class="window-button" data-action="close" title="Close" aria-label="Close"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button>
+                    </div>
+                </div>
+                <div class="window-body media-content">
+                    <video id="media-video" controls loop playsinline>
+                        <source src="" type="video/mp4">
+                    </video>
+                    <div id="media-youtube" class="media-youtube">
+                        <div id="media-youtube-player"></div>
+                    </div>
+                    <img id="media-image" src="" alt="Display Image">
+                    <div class="text-content" id="media-text">
+                        <h2>CodeCamp Sponsors 2025</h2>
+                        <p>Our sponsors make this possible. Please support them!</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="window image-window" id="image-window" data-window="image-window">
+                <div class="window-bar">
+                    <div class="window-title">
+                        <svg class="icon" aria-hidden="true"><use href="#i-image"/></svg>
+                    </div>
+                    <div class="window-controls">
+                        <button type="button" class="window-button" data-action="sponsor-prev" title="Previous sponsor" aria-label="Previous sponsor"><svg class="icon" aria-hidden="true"><use href="#i-prev"/></svg></button>
+                        <button type="button" class="window-button" data-action="sponsor-pause" data-state="playing" title="Pause sponsors" aria-label="Pause sponsors"><svg class="icon icon-main" aria-hidden="true"><use href="#i-pause"/></svg><svg class="icon icon-alt" aria-hidden="true"><use href="#i-play"/></svg></button>
+                        <button type="button" class="window-button" data-action="sponsor-next" title="Next sponsor" aria-label="Next sponsor"><svg class="icon" aria-hidden="true"><use href="#i-next"/></svg></button>
+                        <button type="button" class="window-button" data-action="float" data-state="tiled" title="Float window" aria-label="Float window"><svg class="icon icon-main" aria-hidden="true"><use href="#i-float"/></svg><svg class="icon icon-alt" aria-hidden="true"><use href="#i-tile"/></svg></button>
+                        <button type="button" class="window-button" data-action="minimize" title="Minimize" aria-label="Minimize"><svg class="icon" aria-hidden="true"><use href="#i-min"/></svg></button>
+                        <button type="button" class="window-button" data-action="maximize" data-state="windowed" title="Maximize" aria-label="Maximize"><svg class="icon icon-main" aria-hidden="true"><use href="#i-max"/></svg><svg class="icon icon-alt" aria-hidden="true"><use href="#i-restore"/></svg></button>
+                        <button type="button" class="window-button" data-action="close" title="Close" aria-label="Close"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button>
+                    </div>
+                </div>
+                <div class="window-body image-window-content">
+                    <img id="display-image" src="" alt="Sponsor Logo" style="display: none;">
+                    <div id="image-placeholder">No sponsor logo loaded</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="window game-window hidden" id="game-window" data-window="game-window">
+            <div class="window-bar">
+                <div class="window-title">
+                    <svg class="icon" aria-hidden="true"><use href="#i-quiz"/></svg>
+                </div>
+                <div class="window-controls">
+                    <button type="button" class="window-button" data-action="float" data-state="tiled" title="Float window" aria-label="Float window"><svg class="icon icon-main" aria-hidden="true"><use href="#i-float"/></svg><svg class="icon icon-alt" aria-hidden="true"><use href="#i-tile"/></svg></button>
+                    <button type="button" class="window-button" data-action="minimize" title="Minimize" aria-label="Minimize"><svg class="icon" aria-hidden="true"><use href="#i-min"/></svg></button>
+                    <button type="button" class="window-button" data-action="maximize" data-state="windowed" title="Maximize" aria-label="Maximize"><svg class="icon icon-main" aria-hidden="true"><use href="#i-max"/></svg><svg class="icon icon-alt" aria-hidden="true"><use href="#i-restore"/></svg></button>
+                    <button type="button" class="window-button" data-action="close" title="Close" aria-label="Close"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button>
+                </div>
+            </div>
+            <div class="window-body game-window-content">
+                <div class="game-waiting" id="game-waiting">
+                    <h2>Waiting for game to start...</h2>
+                    <p>Join the game at <span id="game-link"></span> to participate!</p>
+                    <img src="/images/Code%20Camp%20Quiz%20Game-qrcode.png" alt="Game QR Code" class="game-image">
+                </div>
+                <div class="game-active hidden" id="game-active">
+                    <div class="game-question-section">
+                        <div class="game-question-number" id="game-question-number">Question 1 of 10</div>
+                        <div class="game-question-text" id="game-question-text">Loading question...</div>
+                        <div class="game-countdown hidden" id="game-countdown">30</div>
+                    </div>
+                    <div class="game-answers" id="game-answers"></div>
+                </div>
+                <div class="game-leaderboard hidden" id="game-leaderboard">
+                    <h2>Final Leaderboard</h2>
+                    <div class="leaderboard-list" id="leaderboard-list"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="window countdown-window" id="countdown-window" data-window="countdown-window">
+            <div class="window-bar">
+                <div class="window-title">
+                    <svg class="icon" aria-hidden="true"><use href="#i-clock"/></svg>
+                </div>
+                <div class="window-controls">
+                    <button type="button" class="window-button" data-action="float" data-state="tiled" title="Float window" aria-label="Float window"><svg class="icon icon-main" aria-hidden="true"><use href="#i-float"/></svg><svg class="icon icon-alt" aria-hidden="true"><use href="#i-tile"/></svg></button>
+                    <button type="button" class="window-button" data-action="minimize" title="Minimize" aria-label="Minimize"><svg class="icon" aria-hidden="true"><use href="#i-min"/></svg></button>
+                    <button type="button" class="window-button" data-action="maximize" data-state="windowed" title="Maximize" aria-label="Maximize"><svg class="icon icon-main" aria-hidden="true"><use href="#i-max"/></svg><svg class="icon icon-alt" aria-hidden="true"><use href="#i-restore"/></svg></button>
+                    <button type="button" class="window-button" data-action="close" title="Close" aria-label="Close"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button>
+                </div>
+            </div>
+            <div class="window-body countdown-window-content">
+                <div class="countdown-time" id="countdown-time">00:00</div>
+                <div class="countdown-label" id="countdown-label">Next Sponsor</div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <div class="notifications-container" id="notifications-container"></div>
+    <div class="youtube-audio-hidden">
+        <div id="youtube-audio-player"></div>
+    </div>
+
+    <script nonce="{{.Nonce}}">
+        window.SPONSORS_DATA = {{.SponsorsJSON}};
+        window.EVENT_DATES = {{.EventDatesJSON}};
+        window.ROOM_SETTINGS = {{.RoomSettingsJSON}};
+    </script>
+    <script src="/js/script.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex">
+    <title>Sign in · CodeCamp Control</title>
+    <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body class="auth-body">
+    <main class="auth-card">
+        <div class="brand">CodeCamp 2025</div>
+        <h1>Dashboard sign in</h1>
+        <p>Staff only. Players join the quiz from the game screen and do not need an account.</p>
+        {{if .Error}}<div class="banner bad">{{.Error}}</div>{{end}}
+        <form method="post" action="/login">
+            <input type="hidden" name="csrf" value="{{.CSRF}}">
+            <div class="field">
+                <label for="email">Email</label>
+                <input id="email" name="email" type="email" autocomplete="username" required>
+            </div>
+            <div class="field">
+                <label for="password">Password</label>
+                <input id="password" name="password" type="password" autocomplete="current-password" required>
+            </div>
+            <button class="button" type="submit">Sign in</button>
+        </form>
+    </main>
+</body>
+</html>

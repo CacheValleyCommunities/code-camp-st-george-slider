@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   app:
     build:
@@ -7,21 +5,19 @@ services:
       dockerfile: Dockerfile
     container_name: code-camp-slider-2025
     ports:
-      - "3000:80"  # Map host port 3000 to container port 80
+      - "3000:80"
     environment:
-      - PORT=80
-      - NODE_ENV=production
+      PORT: "80"
+      DATA_DIR: /app/data
+    volumes:
+      - codecamp-data:/app/data
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:80', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:80/healthz"]
       interval: 30s
       timeout: 3s
       retries: 3
       start_period: 5s
-    # Uncomment below for development with volume mounts
-    # volumes:
-    #   - ./views:/app/views
-    #   - ./public:/app/public
-    #   - ./logos:/app/logos
-    #   - ./server.js:/app/server.js
 
+volumes:
+  codecamp-data:

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeCamp Quiz</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/game.css">
+</head>
+<body>
+    <div class="game-container">
+        <h1>CodeCamp Quiz</h1>
+        <p class="lede">No account needed. You get a player name when you join.</p>
+        <div class="user-id-display">
+            <div class="user-id-label">Your player name</div>
+            <div class="user-id-value" id="user-id">Connecting...</div>
+        </div>
+        <div class="status-message" id="status-message">Waiting for the game to start...</div>
+        <div class="score-display" id="score-display" style="display: none;">
+            Your score: <span id="score-value">0</span> points
+        </div>
+        <div class="question-container" id="question-container" style="display: none;">
+            <div class="question-text" id="question-text"></div>
+            <div class="countdown-display" id="countdown-display">30</div>
+            <div class="answers-grid" id="answers-grid"></div>
+        </div>
+    </div>
+    <script src="/js/ws.js"></script>
+    <script src="/js/game-client.js"></script>
+</body>
+</html>

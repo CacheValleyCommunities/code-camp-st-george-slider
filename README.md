@@ -1,313 +1,81 @@
-# CodeCamp 2025 Event Display System
+# CodeCamp 2025 Event Display
 
-A comprehensive event display and interactive quiz system for CodeCamp 2025, featuring sponsor slides, real-time media control, interactive games, and a Linux desktop-themed interface.
+Sponsor display, remote media controls, and a live quiz for CodeCamp. The room display and the quiz are public. The control room requires an account.
 
-## Features
+## Access
 
-### 🖥️ Main Display (`/`)
-- **Sponsor Logo Slider**: Automatically cycles through sponsor logos organized by tier (Platinum, Gold, Silver, Bronze)
-- **Media Window**: Remote-controlled video/image/text display with YouTube support
-- **Event Countdown Timer**: Dynamic countdown showing time until Code Camp starts, Day Camp ends, and 24 HR Camp ends
-- **Game Window**: Full-screen interactive quiz game display
-- **Announcements Ticker**: Scrolling ticker for event announcements
-- **System Notifications**: Real-time notifications with different types (info, success, warning, error)
-- **Linux Desktop Theme**: Catppuccin-inspired color scheme with tiling window manager layout
+- `/` — room display. Public.
+- `/game` — quiz. Public websocket. Players do not create accounts; the server assigns a name.
+- `/login` and `/admin` — control room. Sign in as `brent@codecamp.com` with password `password`. That admin is created on startup when the email is missing. Admins can add staff or more admins. Staff can run the show and cannot add users.
+- `/setup` — create the first admin by hand. Available only while the database has no users, which is the test databases and a failed seed.
 
-### 🎮 Interactive Quiz Game (`/game`)
-- **Multi-Player Quiz**: Real-time quiz game with multiple-choice questions
-- **Session-Based Players**: Server-generated user names and session tokens
-- **Time-Based Scoring**: Points decrease over time with penalty multipliers
-- **Live Leaderboard**: Top 10 players displayed at game end
-- **Mobile-Friendly**: Responsive design optimized for mobile devices
+Sessions last 24 hours, are stored in SQLite, and are sent as an HttpOnly cookie. Control-room actions travel on `/ws/admin` and are rejected when the session is gone. Game clients use `/ws/game` and can only join and answer. The display uses `/ws/display` and only receives commands.
 
-### ⚙️ Admin Panel (`/admin`)
-- **Media Control**: Remote control for video, image, and text displays
-- **Game Management**: Start/stop games, select from multiple game sets, toggle game window
-- **Player Monitoring**: View connected players in real-time
-- **Notification System**: Send custom or pre-canned notifications
-- **Ticker Management**: Update event announcements ticker
-- **Mobile-Friendly**: Fully responsive admin interface
+## Tech stack
 
-## Tech Stack
+- Go HTTP router (`chi`)
+- HTML templates
+- Gorilla WebSockets
+- GORM with SQLite
+- bcrypt passwords
 
-- **Backend**: Node.js with Express.js
-- **Templating**: Handlebars.js
-- **Real-Time**: Socket.IO for WebSocket communication
-- **Frontend**: Vanilla JavaScript, CSS3
-- **Containerization**: Docker
+## Run locally
 
-## Installation
-
-### Prerequisites
-- Node.js 20+ (or use Docker)
-- npm or yarn
-
-### Local Development
-
-1. Clone the repository:
-```bash
-git clone <repository-url>
-cd code-camp-slider-2025
-```
-
-2. Install dependencies:
-```bash
-npm install
-```
-
-3. Start the server:
-```bash
-npm start
-```
-
-The application will be available at `http://localhost:3000`
-
-### Docker Deployment
-
-#### Using Docker Compose (Recommended)
-
-1. Start the application:
-```bash
-docker-compose up -d
-```
-
-2. View logs:
-```bash
-docker-compose logs -f
-```
-
-3. Stop the application:
-```bash
-docker-compose down
-```
-
-The application will be available at `http://localhost:3000`
-
-#### Using Docker Directly
-
-1. Build the Docker image:
-```bash
-docker build -t code-camp-slider-2025 .
-```
-
-2. Run the container:
-```bash
-docker run -p 8080:80 code-camp-slider-2025
-```
-
-The application will be available at `http://localhost:8080`
-
-#### Development with Docker Compose
-
-For development with volume mounts (hot-reload):
-```bash
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
-```
-
-### Environment Variables
-
-- `PORT`: Server port (default: 3000, Docker: 80)
-
-## Project Structure
-
-```
-code-camp-slider-2025/
-├── server.js              # Main Express server and Socket.IO setup
-├── package.json           # Dependencies and scripts
-├── Dockerfile            # Docker configuration
-├── views/                # Handlebars templates
-│   ├── index.hbs        # Main display page
-│   ├── admin.hbs        # Admin control panel
-│   └── game.hbs         # Player game interface
-├── public/               # Static assets
-│   ├── css/
-│   │   └── styles.css   # Main stylesheet
-│   └── js/
-│       ├── script.js    # Main display JavaScript
-│       └── game-data.js # Quiz game questions
-└── logos/                # Sponsor logos organized by tier
-    ├── platinum/
-    ├── gold/
-    ├── silver/
-    └── bronze/
-```
-
-## Usage
-
-### Adding Sponsor Logos
-
-Place sponsor logo images in the appropriate tier folder:
-- `logos/platinum/` - Platinum sponsors (1 minute display)
-- `logos/gold/` - Gold sponsors (1 minute display)
-- `logos/silver/` - Silver sponsors (30 seconds display)
-- `logos/bronze/` - Bronze sponsors (15 seconds display)
-
-Supported formats: PNG, JPG, JPEG, SVG, GIF, WEBP
-
-### Configuring Event Dates
-
-Edit `server.js` to update event dates:
-```javascript
-const eventDates = {
-    start: '2025-01-15T09:00:00',      // Code Camp start
-    dayCampEnd: '2025-01-15T17:00:00', // Day Camp end
-    camp24End: '2025-01-16T09:00:00'   // 24 HR Camp end
-};
-```
-
-### Adding Quiz Games
-
-Edit `public/js/game-data.js` to add or modify quiz games:
-```javascript
-const gameData = {
-    games: [
-        {
-            id: 'your-game-id',
-            name: 'Your Game Name',
-            description: 'Game description',
-            questions: [
-                {
-                    id: 1,
-                    question: "Your question?",
-                    answers: [
-                        { text: "Answer 1", correct: true },
-                        { text: "Answer 2", correct: false },
-                        // ...
-                    ]
-                }
-                // ...
-            ]
-        }
-    ]
-};
-```
-
-## API Endpoints
-
-- `GET /` - Main display page
-- `GET /admin` - Admin control panel
-- `GET /game` - Player game interface
-
-## WebSocket Events
-
-### Client → Server
-
-**Media Control:**
-- `media-control` - Control media window (show/hide/mode)
-
-**Notifications:**
-- `notification` - Send notification
-- `dismiss-notification` - Dismiss notification
-
-**Game Control:**
-- `game-join` - Join game as player
-- `game-start` - Start game (admin only)
-- `game-stop` - Stop game (admin only)
-- `game-select` - Select game (admin only)
-- `game-answer` - Submit answer
-- `game-window-toggle` - Toggle game window (admin only)
-
-**Ticker:**
-- `ticker-update` - Update announcements ticker (admin only)
-
-### Server → Client
-
-- `media-command` - Media window commands
-- `notification` - Display notification
-- `dismiss-notification` - Dismiss notification
-- `game-joined` - Game join confirmation
-- `game-question` - New question
-- `game-answer-result` - Answer result
-- `game-leaderboard` - Final leaderboard
-- `game-players-update` - Player list update
-- `game-list-update` - Available games list
-- `ticker-update` - Ticker content update
-
-## Features in Detail
-
-### Sponsor Display
-- Automatically loads logos from `logos/` directory
-- Displays logos by tier with appropriate duration
-- Smooth transitions between sponsors
-
-### Media Window
-- Supports YouTube URLs (auto-embeds)
-- Supports direct video files
-- Supports images
-- Supports custom text content
-- Remote controlled via admin panel
-
-### Quiz Game System
-- Server-managed game state
-- Session-based player identification
-- Time-based scoring with penalties
-- Real-time updates via WebSocket
-- Supports multiple game sets
-- Auto-advances when all players answer
-
-### Notifications
-- Four types: info, success, warning, error
-- Pre-canned notifications available
-- Custom notifications supported
-- Auto-dismiss option
-- Manual dismissal
-
-## Mobile Support
-
-Both the admin panel and game interface are fully responsive and optimized for mobile devices:
-- Touch-friendly buttons (minimum 44px height)
-- Responsive layouts
-- Optimized font sizes
-- Landscape orientation support
-
-## Deployment
-
-### Coolify Deployment
-
-The Dockerfile is configured for Coolify deployment:
-- Exposes port 80
-- Uses non-root user for security
-- Includes health checks
-- Production-ready configuration
-
-### Environment Configuration
-
-Set the `PORT` environment variable if deploying to a different port.
-
-## Development
-
-### Running in Development Mode
+Go 1.26 or newer:
 
 ```bash
-npm start
-# or
-npm run dev
+go run ./cmd/server
 ```
 
-### File Watching
+Open `http://localhost:3000/login` and sign in as `brent@codecamp.com` with password `password`. The database is created at `data/codecamp.db`.
 
-For development with auto-reload, consider using `nodemon`:
 ```bash
-npm install -g nodemon
-nodemon server.js
+go test ./...
 ```
 
-## License
+`PORT` defaults to `3000`. `DATA_DIR` defaults to `data`. `APP_ROOT` defaults to the working directory.
 
-ISC
+## Docker
 
-## Contributing
+```bash
+docker compose up -d
+```
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
+The app listens on `http://localhost:3000`. Accounts persist in the `codecamp-data` volume.
 
-## Support
+For a rebuild after Go changes, run `docker compose up -d --build`. Template and asset mounts for local iteration:
 
-For issues or questions, please open an issue on the repository.
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+```
 
----
+## Project layout
 
-**CodeCamp 2025: Bring Your Genius** 🚀
+```
+cmd/server/            # process entrypoint
+internal/auth/         # users, sessions, bcrypt
+internal/realtime/     # public game socket and admin commands
+internal/logos/        # sponsor logo records and files
+internal/web/          # router, pages, CSRF
+templates/             # display, quiz, login, setup, control room
+public/                # CSS, JS, images
+data/                  # SQLite database and uploaded logos
+```
 
+## Sponsor logos
+
+Upload logos from the control room. Each file is stored as a PNG in `data/logos` with a GUID filename. The record stores the event it belongs to and how many whole seconds it stays on screen. The display rotates the logos for the current event title.
+
+Images already in `logos/platinum`, `logos/gold`, `logos/silver`, and `logos/bronze` are imported once, while the logo table is still empty. PNG, JPG, JPEG, and GIF are imported. SVG and WEBP are skipped, and the original files stay in place.
+
+## Event dates
+
+The countdown, event title, Wi-Fi line, and ticker are edited in the control room. They are stored in the local SQLite database, and an open display updates when you save.
+
+## Quiz content
+
+Edit `public/js/game-data.js`. The server reads that file at startup and never sends the `correct` flags to players.
+
+## Control room
+
+Signed-in staff can show video, images, and text, upload sponsor logos, edit the event title, Wi-Fi line, countdown, and ticker, play YouTube audio on the display, send notifications, and start or stop a quiz. Admins also add and remove dashboard users from the bottom of `/admin`. Removing the last admin is rejected, and you cannot remove yourself.

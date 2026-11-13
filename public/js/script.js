@@ -16,7 +16,63 @@ updateClock();
 setInterval(updateClock, 10000);
 
 // WebSocket connection for media control
-const socket = io();
+const socket = createSocket("/ws/display");
+
+function fillLeaderboard(list, players) {
+    list.replaceChildren();
+    if (!players || players.length === 0) {
+        const empty = document.createElement("div");
+        empty.style.cssText = "color: #858585; padding: 20px; text-align: center;";
+        empty.textContent = "No players participated";
+        list.appendChild(empty);
+        return;
+    }
+    players.forEach((player) => {
+        const item = document.createElement("div");
+        const rank = Number(player.rank);
+        item.className = "leaderboard-item";
+        if (Number.isInteger(rank) && rank >= 1 && rank <= 10) {
+            item.classList.add("rank-" + rank);
+        }
+        const rankEl = document.createElement("div");
+        rankEl.className = "leaderboard-rank";
+        rankEl.textContent = "#" + (Number.isInteger(rank) ? String(rank) : "");
+        const nameEl = document.createElement("div");
+        nameEl.className = "leaderboard-name";
+        nameEl.textContent = String(player.name ?? "");
+        const scoreEl = document.createElement("div");
+        scoreEl.className = "leaderboard-score";
+        scoreEl.textContent = String(player.score ?? 0) + " pts";
+        item.append(rankEl, nameEl, scoreEl);
+        list.appendChild(item);
+    });
+}
+
+function roomAnnouncements() {
+    const room = window.ROOM_SETTINGS;
+    if (room && Array.isArray(room.announcements) && room.announcements.length > 0) {
+        return room.announcements.map((line) => String(line));
+    }
+    return ["Welcome to CodeCamp 2025!"];
+}
+
+function applyRoomSettings(data) {
+    if (!data || typeof data !== "object") {
+        return;
+    }
+    const title = document.getElementById("event-title");
+    if (title && typeof data.eventTitle === "string") {
+        title.textContent = data.eventTitle;
+    }
+    const wifi = document.getElementById("wifi-info");
+    if (wifi && typeof data.wifiLabel === "string") {
+        wifi.textContent = data.wifiLabel;
+        wifi.hidden = data.wifiLabel === "";
+    }
+    if (data.eventDates && typeof data.eventDates === "object") {
+        window.EVENT_DATES = data.eventDates;
+    }
+}
 
 // Announcements Ticker
 (function() {
@@ -24,30 +80,50 @@ const socket = io();
     let gameLink = window.location.origin + '/game';
     document.getElementById('game-link').textContent = gameLink;
     const tickerContent = document.getElementById('ticker-content');
-    let announcements = [
-        'Bring Your Genius!',
-        'Don\'t forget the semi-colon! It\'s important in Python! 😉',
-        'Bring Your Genius!',
-    ];
+    let announcements = roomAnnouncements();
 
     function updateTicker() {
         if (!tickerContent) return;
         
         // Duplicate content for seamless loop
-        const items = announcements.map(msg => 
-            `<span class="ticker-item">${msg}</span>`
-        ).join('<span class="ticker-separator">•</span>');
-        
-        // Duplicate for seamless scrolling
-        tickerContent.innerHTML = items + '<span class="ticker-separator">•</span>' + items;
+        tickerContent.replaceChildren();
+        const appendItems = () => {
+            announcements.forEach((msg, index) => {
+                if (index > 0) {
+                    const separator = document.createElement("span");
+                    separator.className = "ticker-separator";
+                    separator.textContent = "•";
+                    tickerContent.appendChild(separator);
+                }
+                const item = document.createElement("span");
+                item.className = "ticker-item";
+                item.textContent = msg;
+                tickerContent.appendChild(item);
+            });
+        };
+        appendItems();
+        const separator = document.createElement("span");
+        separator.className = "ticker-separator";
+        separator.textContent = "•";
+        tickerContent.appendChild(separator);
+        appendItems();
     }
 
     // Listen for ticker updates from server
     socket.on('ticker-update', (data) => {
         if (data.announcements && Array.isArray(data.announcements)) {
-            announcements = data.announcements;
+            announcements = data.announcements.map((line) => String(line));
             updateTicker();
         }
+    });
+
+    socket.on('room-settings', (data) => {
+        applyRoomSettings(data);
+        if (data && Array.isArray(data.announcements) && data.announcements.length > 0) {
+            announcements = data.announcements.map((line) => String(line));
+            updateTicker();
+        }
+        updateEventCountdown();
     });
 
     // Initialize ticker
@@ -59,7 +135,216 @@ const mediaYoutube = document.getElementById('media-youtube');
 const mediaImage = document.getElementById('media-image');
 const mediaText = document.getElementById('media-text');
 const modeIndicator = document.getElementById('mode-indicator');
-const youtubeAudioPlayer = document.getElementById('youtube-audio-player');
+
+function setMode(mode) {
+    if (!modeIndicator) {
+        return;
+    }
+    modeIndicator.dataset.mode = mode;
+    const labels = {
+        offline: 'Offline',
+        online: 'Online',
+        video: 'Video',
+        youtube: 'YouTube',
+        image: 'Image',
+        text: 'Text'
+    };
+    modeIndicator.title = labels[mode] || mode;
+}
+
+const sessionState = {
+    audioUnlocked: false,
+    autoplay: true,
+    wantsWake: false,
+    wakeLock: null
+};
+let volumeLevel = 80;
+let volumeMuted = false;
+const ytPlayers = { media: null, audio: null };
+let ytReady = false;
+const ytQueue = [];
+
+function readStorage(key) {
+    try {
+        return localStorage.getItem(key);
+    } catch (err) {
+        return null;
+    }
+}
+
+function writeStorage(key, value) {
+    try {
+        if (value === null) {
+            localStorage.removeItem(key);
+            return;
+        }
+        localStorage.setItem(key, value);
+    } catch (err) {
+        console.error('Storage write failed:', err);
+    }
+}
+
+function readStoredAutoplay() {
+    const saved = readStorage('display-autoplay');
+    if (saved === null) {
+        return true;
+    }
+    return saved === '1';
+}
+
+sessionState.autoplay = readStoredAutoplay();
+const storedVolumeRaw = readStorage('display-volume');
+if (storedVolumeRaw !== null) {
+    const storedVolume = Number(storedVolumeRaw);
+    if (Number.isFinite(storedVolume)) {
+        volumeLevel = Math.max(0, Math.min(100, storedVolume));
+    }
+}
+volumeMuted = readStorage('display-muted') === '1';
+if (mediaVideo) {
+    mediaVideo.muted = true;
+    mediaVideo.volume = volumeLevel / 100;
+}
+
+function shouldHear() {
+    return sessionState.audioUnlocked && sessionState.autoplay && !volumeMuted && volumeLevel > 0;
+}
+
+function applyMediaElementAudio() {
+    if (!mediaVideo) {
+        return;
+    }
+    mediaVideo.volume = Math.max(0, Math.min(1, volumeLevel / 100));
+    mediaVideo.muted = !shouldHear();
+    const playing = mediaVideo.classList.contains('active') && mediaVideo.src;
+    if (shouldHear() && playing) {
+        mediaVideo.play().catch((err) => console.log('Video play failed:', err));
+    } else if (!sessionState.autoplay) {
+        mediaVideo.pause();
+    }
+}
+
+function applyPlayerAudio(player) {
+    if (!player || typeof player.setVolume !== 'function') {
+        return;
+    }
+    const level = volumeMuted ? 0 : volumeLevel;
+    try {
+        player.setVolume(level);
+        if (shouldHear()) {
+            player.unMute();
+            player.playVideo();
+        } else {
+            player.mute();
+            if (!sessionState.autoplay && typeof player.pauseVideo === 'function') {
+                player.pauseVideo();
+            }
+        }
+    } catch (err) {
+        console.log('YouTube volume update failed:', err);
+    }
+}
+
+function applyVolume() {
+    applyMediaElementAudio();
+    applyPlayerAudio(ytPlayers.media);
+    applyPlayerAudio(ytPlayers.audio);
+    writeStorage('display-volume', String(volumeLevel));
+    writeStorage('display-muted', volumeMuted ? '1' : '0');
+    const muteButton = document.getElementById('volume-mute');
+    const slider = document.getElementById('volume-slider');
+    if (muteButton) {
+        const silenced = volumeMuted || volumeLevel === 0;
+        muteButton.setAttribute('aria-pressed', silenced ? 'true' : 'false');
+        muteButton.setAttribute('aria-label', silenced ? 'Unmute' : 'Mute');
+        muteButton.title = silenced ? 'Unmute' : 'Mute';
+    }
+    if (slider && document.activeElement !== slider) {
+        slider.value = String(volumeLevel);
+    }
+}
+
+function whenYouTubeReady(fn) {
+    if (ytReady || (window.YT && window.YT.Player)) {
+        ytReady = true;
+        fn();
+        return;
+    }
+    ytQueue.push(fn);
+}
+
+function flushYouTubeQueue() {
+    ytReady = true;
+    const pending = ytQueue.splice(0);
+    pending.forEach((fn) => fn());
+}
+
+window.onYouTubeIframeAPIReady = function() {
+    flushYouTubeQueue();
+};
+
+if (window.YT && window.YT.Player) {
+    ytReady = true;
+}
+
+function stopMediaYouTube() {
+    const player = ytPlayers.media;
+    if (player && typeof player.stopVideo === 'function') {
+        try {
+            player.stopVideo();
+        } catch (err) {
+            console.log('YouTube stop failed:', err);
+        }
+    }
+    if (mediaYoutube) {
+        mediaYoutube.classList.remove('active');
+        mediaYoutube.style.display = 'none';
+    }
+}
+
+function ensureYouTubePlayer(kind, videoId) {
+        const elementId = kind === 'media' ? 'media-youtube-player' : 'youtube-audio-player';
+    whenYouTubeReady(() => {
+        const existing = ytPlayers[kind];
+        if (existing && typeof existing.loadVideoById === 'function') {
+            if (sessionState.autoplay) {
+                existing.loadVideoById(videoId);
+            } else if (typeof existing.cueVideoById === 'function') {
+                existing.cueVideoById(videoId);
+            }
+            applyPlayerAudio(existing);
+            return;
+        }
+        const host = document.getElementById(elementId);
+        if (!host) {
+            return;
+        }
+        if (kind === 'media' && mediaYoutube) {
+            mediaYoutube.classList.add('active');
+            mediaYoutube.style.display = 'block';
+        }
+        ytPlayers[kind] = new YT.Player(elementId, {
+            videoId: videoId,
+            playerVars: {
+                autoplay: sessionState.autoplay ? 1 : 0,
+                mute: sessionState.audioUnlocked ? 0 : 1,
+                loop: 1,
+                playlist: videoId,
+                controls: kind === 'media' ? 1 : 0,
+                modestbranding: 1,
+                rel: 0,
+                iv_load_policy: 3,
+                fs: kind === 'media' ? 1 : 0,
+                origin: window.location.origin
+            },
+            events: {
+                onReady: function(event) {
+                    applyPlayerAudio(event.target);
+                }
+            }
+        });
+    });
+}
 
 // Extract YouTube video ID from various URL formats
 function extractYouTubeId(url) {
@@ -99,10 +384,7 @@ function switchMode(mode, data = {}) {
     // Pause video if switching away from video mode
     if (mode !== 'video') {
         mediaVideo.pause();
-        // Clear YouTube iframe src to stop playback
-        if (mediaYoutube.src) {
-            mediaYoutube.src = '';
-        }
+        stopMediaYouTube();
     }
 
     // Show selected media
@@ -112,14 +394,10 @@ function switchMode(mode, data = {}) {
             if (isYouTubeUrl(data.url)) {
                 const videoId = extractYouTubeId(data.url);
                 if (videoId) {
-                    // Use YouTube embed URL with proper parameters
-                    const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=1&modestbranding=1&rel=0&enablejsapi=1`;
-                    mediaYoutube.src = embedUrl;
                     mediaYoutube.classList.add('active');
-                    modeIndicator.textContent = '[YOUTUBE]';
-                    
-                    // Ensure iframe is visible
                     mediaYoutube.style.display = 'block';
+                    setMode('youtube');
+                    ensureYouTubePlayer('media', videoId);
                 } else {
                     console.error('Invalid YouTube URL');
                 }
@@ -128,21 +406,20 @@ function switchMode(mode, data = {}) {
                 mediaVideo.src = data.url;
                 mediaVideo.classList.add('active');
                 mediaVideo.style.display = 'block';
-                modeIndicator.textContent = '[VIDEO]';
-                if (mediaVideo.src) {
-                    mediaVideo.play().catch(e => console.log('Video play failed:', e));
-                }
+                setMode('video');
+                applyMediaElementAudio();
             }
         } else {
             // No URL provided, show video element if it has a source
             if (mediaVideo.src && !isYouTubeUrl(mediaVideo.src)) {
                 mediaVideo.classList.add('active');
                 mediaVideo.style.display = 'block';
-                modeIndicator.textContent = '[VIDEO]';
-            } else if (mediaYoutube.src) {
+                setMode('video');
+                applyMediaElementAudio();
+            } else if (mediaYoutube.classList.contains('active') || ytPlayers.media) {
                 mediaYoutube.classList.add('active');
                 mediaYoutube.style.display = 'block';
-                modeIndicator.textContent = '[YOUTUBE]';
+                setMode('youtube');
             }
         }
     } else if (mode === 'image') {
@@ -151,7 +428,7 @@ function switchMode(mode, data = {}) {
         }
         mediaImage.classList.add('active');
         mediaImage.style.display = 'block';
-        modeIndicator.textContent = '[IMAGE]';
+        setMode('image');
     } else if (mode === 'text') {
         if (data.title) {
             mediaText.querySelector('h2').textContent = data.title;
@@ -161,19 +438,30 @@ function switchMode(mode, data = {}) {
         }
         mediaText.classList.add('active');
         mediaText.style.display = 'block';
-        modeIndicator.textContent = '[TEXT]';
+        setMode('text');
     }
 }
 
 function toggleMediaWindow(expand) {
+    if (!mediaWindow) {
+        return;
+    }
     if (expand) {
-        mediaWindow.classList.remove('collapsed', 'hidden');
+        if (window.DisplayWindows) {
+            window.DisplayWindows.show('media-window');
+        } else {
+            mediaWindow.classList.remove('collapsed', 'hidden', 'minimized');
+            mediaWindow.style.display = '';
+        }
         mediaWindow.classList.add('expanded');
-        mediaWindow.style.display = 'flex';
     } else {
         mediaWindow.classList.remove('expanded');
-        mediaWindow.classList.add('hidden');
-        mediaWindow.style.display = 'none';
+        if (window.DisplayWindows) {
+            window.DisplayWindows.hide('media-window');
+        } else {
+            mediaWindow.classList.add('hidden');
+            mediaWindow.style.display = 'none';
+        }
     }
 }
 
@@ -199,12 +487,12 @@ socket.on('media-command', (data) => {
 
 socket.on('connect', () => {
     console.log('WebSocket connected');
-    modeIndicator.textContent = '[ONLINE]';
+    setMode('online');
 });
 
 socket.on('disconnect', () => {
     console.log('WebSocket disconnected');
-    modeIndicator.textContent = '[OFFLINE]';
+    setMode('offline');
 });
 
 // Notification system
@@ -228,17 +516,26 @@ socket.on('disconnect', () => {
         }
 
         const notification = document.createElement('div');
-        notification.className = `notification ${type}`;
-        notification.setAttribute('data-notification-id', notificationId);
-        
-        notification.innerHTML = `
-            <div class="notification-icon">${notificationIcons[type] || notificationIcons.info}</div>
-            <div class="notification-content">
-                <div class="notification-title">${title || type.toUpperCase()}</div>
-                <div class="notification-message">${message || ''}</div>
-            </div>
-            <button class="notification-close" onclick="dismissNotification('${notificationId}')">×</button>
-        `;
+        const safeType = ["info", "success", "warning", "error"].includes(type) ? type : "info";
+        notification.className = `notification ${safeType}`;
+        const icon = document.createElement("div");
+        icon.className = "notification-icon";
+        icon.textContent = notificationIcons[safeType] || notificationIcons.info;
+        const content = document.createElement("div");
+        content.className = "notification-content";
+        const titleEl = document.createElement("div");
+        titleEl.className = "notification-title";
+        titleEl.textContent = title || safeType.toUpperCase();
+        const messageEl = document.createElement("div");
+        messageEl.className = "notification-message";
+        messageEl.textContent = message || "";
+        content.append(titleEl, messageEl);
+        const closeButton = document.createElement("button");
+        closeButton.className = "notification-close";
+        closeButton.type = "button";
+        closeButton.textContent = "×";
+        closeButton.addEventListener("click", () => dismissNotification(notificationId));
+        notification.append(icon, content, closeButton);
 
         notificationsContainer.appendChild(notification);
         activeNotifications.set(notificationId, notification);
@@ -339,24 +636,27 @@ socket.on('disconnect', () => {
         
         if (data.action === 'show') {
             console.log('Showing game window');
-            gameWindow.classList.remove('hidden');
-            gameWindow.style.display = 'flex';
-            // Make sure it's visible
+            if (window.DisplayWindows) {
+                window.DisplayWindows.show('game-window');
+            } else {
+                gameWindow.classList.remove('hidden');
+                gameWindow.style.display = '';
+            }
             gameWindow.style.visibility = 'visible';
             gameWindow.style.opacity = '1';
-            
-            // Reset to waiting state
             resetToWaitingState();
         } else if (data.action === 'hide') {
             console.log('Hiding game window');
-            gameWindow.classList.add('hidden');
-            gameWindow.style.display = 'none';
-            // Exit fullscreen if active
             if (isGameWindowFullscreen) {
                 gameWindow.classList.remove('fullscreen');
                 isGameWindowFullscreen = false;
             }
-            // Reset to waiting state
+            if (window.DisplayWindows) {
+                window.DisplayWindows.hide('game-window');
+            } else {
+                gameWindow.classList.add('hidden');
+                gameWindow.style.display = 'none';
+            }
             resetToWaitingState();
         }
     });
@@ -364,23 +664,25 @@ socket.on('disconnect', () => {
     socket.on('game-window-toggle', () => {
         console.log('Game window toggle received');
         
-        if (gameWindow.classList.contains('hidden')) {
-            // Show and fullscreen
-            gameWindow.classList.remove('hidden');
-            gameWindow.style.display = 'flex';
+        if (gameWindow.classList.contains('hidden') || gameWindow.classList.contains('minimized')) {
+            if (window.DisplayWindows) {
+                window.DisplayWindows.show('game-window');
+            } else {
+                gameWindow.classList.remove('hidden', 'minimized');
+                gameWindow.style.display = '';
+            }
             gameWindow.classList.add('fullscreen');
             isGameWindowFullscreen = true;
-            
-            // Reset to waiting state
             resetToWaitingState();
-        } else if (isGameWindowFullscreen) {
-            // Exit fullscreen but keep visible
+        } else if (isGameWindowFullscreen || gameWindow.classList.contains('fullscreen')) {
             gameWindow.classList.remove('fullscreen');
             isGameWindowFullscreen = false;
         } else {
-            // Make fullscreen
             gameWindow.classList.add('fullscreen');
             isGameWindowFullscreen = true;
+        }
+        if (window.DisplayWindows) {
+            window.DisplayWindows.refresh('game-window');
         }
     });
 
@@ -483,22 +785,7 @@ socket.on('disconnect', () => {
 
         const leaderboardList = document.getElementById('leaderboard-list');
         if (leaderboardList) {
-            leaderboardList.innerHTML = '';
-
-            if (data.players && data.players.length > 0) {
-                data.players.forEach((player) => {
-                    const item = document.createElement('div');
-                    item.className = `leaderboard-item rank-${player.rank}`;
-                    item.innerHTML = `
-                        <div class="leaderboard-rank">#${player.rank}</div>
-                        <div class="leaderboard-name">${player.name}</div>
-                        <div class="leaderboard-score">${player.score} pts</div>
-                    `;
-                    leaderboardList.appendChild(item);
-                });
-            } else {
-                leaderboardList.innerHTML = '<div style="color: #858585; padding: 20px; text-align: center;">No players participated</div>';
-            }
+            fillLeaderboard(leaderboardList, data.players);
         }
     });
 
@@ -531,22 +818,7 @@ socket.on('disconnect', () => {
 
         const leaderboardList = document.getElementById('leaderboard-list');
         if (leaderboardList) {
-            leaderboardList.innerHTML = '';
-
-            if (data.players && data.players.length > 0) {
-                data.players.forEach((player) => {
-                    const item = document.createElement('div');
-                    item.className = `leaderboard-item rank-${player.rank}`;
-                    item.innerHTML = `
-                        <div class="leaderboard-rank">#${player.rank}</div>
-                        <div class="leaderboard-name">${player.name}</div>
-                        <div class="leaderboard-score">${player.score} pts</div>
-                    `;
-                    leaderboardList.appendChild(item);
-                });
-            } else {
-                leaderboardList.innerHTML = '<div style="color: #858585; padding: 20px; text-align: center;">No players participated</div>';
-            }
+            fillLeaderboard(leaderboardList, data.players);
         }
     });
 
@@ -576,14 +848,17 @@ socket.on('disconnect', () => {
     // Initialize: ensure waiting state on page load
     resetToWaitingState();
 
-    // Game window buttons are handled by the window management system
+    gameWindow.addEventListener('window-chrome', () => {
+        isGameWindowFullscreen = gameWindow.classList.contains('fullscreen');
+    });
 })();
 
 // Sponsor data from server (injected via Handlebars)
-const sponsors = window.SPONSORS_DATA || [];
+let sponsors = Array.isArray(window.SPONSORS_DATA) ? window.SPONSORS_DATA : [];
 
 let currentSponsorIndex = 0;
 let sponsorInterval = null;
+let sponsorPaused = false;
 let eventCountdownInterval = null;
 const countdownTimeEl = document.getElementById('countdown-time');
 const countdownLabelEl = document.getElementById('countdown-label');
@@ -595,18 +870,24 @@ if (!Array.isArray(sponsors) || sponsors.length === 0) {
     console.warn('No sponsors data available');
 }
 
-// Get display duration based on tier (in milliseconds)
-function getDisplayDuration(tier) {
-    const tierUpper = tier.toUpperCase();
-    if (tierUpper === 'GOLD' || tierUpper === 'PLATINUM') {
-        return 60000; // 1 minute
-    } else if (tierUpper === 'SILVER') {
-        return 30000; // 30 seconds
-    } else if (tierUpper === 'BRONZE') {
-        return 15000; // 15 seconds
+// Display duration is stored per logo, in whole seconds.
+function sponsorMillis(sponsor) {
+    const seconds = Number(sponsor && sponsor.seconds);
+    if (!Number.isFinite(seconds) || seconds < 1) {
+        return 4000;
     }
-    return 4000; // Default fallback
+    return Math.round(seconds) * 1000;
 }
+
+function replaceSponsors(list) {
+    sponsors = Array.isArray(list) ? list : [];
+    currentSponsorIndex = 0;
+    updateSponsorDisplay();
+}
+
+socket.on("sponsors", (data) => {
+    replaceSponsors(data);
+});
 
 // Format time for event countdown (days, hours, minutes, seconds)
 function formatEventTime(ms) {
@@ -709,6 +990,10 @@ function updateImageWindow(sponsor) {
 function updateSponsorDisplay() {
     // Check if we have sponsors
     if (!Array.isArray(sponsors) || sponsors.length === 0) {
+        if (sponsorInterval) {
+            clearInterval(sponsorInterval);
+            sponsorInterval = null;
+        }
         if (imagePlaceholderEl) {
             imagePlaceholderEl.textContent = 'No sponsors available';
             imagePlaceholderEl.style.display = 'block';
@@ -732,19 +1017,61 @@ function updateSponsorDisplay() {
     // Update image window with current sponsor logo
     updateImageWindow(currentSponsor);
 
-    // Clear existing interval and set new one based on current sponsor's tier
     if (sponsorInterval) {
         clearInterval(sponsorInterval);
+        sponsorInterval = null;
     }
 
-    const duration = getDisplayDuration(currentSponsor.tier || 'BRONZE');
+    if (sponsorPaused) {
+        return;
+    }
 
-    // Set interval to move to next sponsor
+    const duration = sponsorMillis(currentSponsor);
+
     sponsorInterval = setInterval(() => {
         currentSponsorIndex = (currentSponsorIndex + 1) % sponsors.length;
         updateSponsorDisplay();
     }, duration);
 }
+
+function setSponsorPaused(paused) {
+    sponsorPaused = paused;
+    const button = document.querySelector('[data-action="sponsor-pause"]');
+    if (button) {
+        button.dataset.state = paused ? 'paused' : 'playing';
+        button.title = paused ? 'Resume sponsors' : 'Pause sponsors';
+        button.setAttribute('aria-label', button.title);
+    }
+    if (paused) {
+        if (sponsorInterval) {
+            clearInterval(sponsorInterval);
+            sponsorInterval = null;
+        }
+        return;
+    }
+    updateSponsorDisplay();
+}
+
+function stepSponsor(delta) {
+    if (!Array.isArray(sponsors) || sponsors.length === 0) {
+        return;
+    }
+    currentSponsorIndex = (currentSponsorIndex + delta + sponsors.length) % sponsors.length;
+    if (sponsorPaused) {
+        const currentSponsor = sponsors[currentSponsorIndex];
+        if (currentSponsor) {
+            updateImageWindow(currentSponsor);
+        }
+        return;
+    }
+    updateSponsorDisplay();
+}
+
+window.SponsorControls = {
+    previous: function() { stepSponsor(-1); },
+    next: function() { stepSponsor(1); },
+    togglePause: function() { setSponsorPaused(!sponsorPaused); }
+};
 
 // Initialize sponsor display if we have sponsors
 if (Array.isArray(sponsors) && sponsors.length > 0) {
@@ -754,533 +1081,690 @@ if (Array.isArray(sponsors) && sponsors.length > 0) {
 // Start event countdown timer
 startEventCountdown();
 
-// Window button functionality and desktop icons
+// Window manager, display session, and volume
 (function() {
-    // Window management functions
-    const windowConfigs = {
-        'media-window': { name: 'Media Player', icon: '🎬' },
-        'image-window': { name: 'Sponsor Logos', icon: '🖼️' },
-        'countdown-window': { name: 'Countdown', icon: '⏱️' },
-        'game-window': { name: 'CodeCamp Quiz', icon: '🎮' }
-    };
+    const WINDOW_IDS = ['media-window', 'image-window', 'countdown-window', 'game-window'];
+    const RESIZE_EDGES = ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'];
+    const POSITION_KEY = 'window-positions';
+    let windowZ = 40;
+    let pointerState = null;
 
-    function getWindow(windowId) {
-        if (windowId === 'media-window') {
-            return document.getElementById('media-window');
-        } else if (windowId === 'image-window') {
-            return document.querySelector('.image-window');
-        } else if (windowId === 'countdown-window') {
-            return document.querySelector('.countdown-window');
-        } else if (windowId === 'game-window') {
-            return document.getElementById('game-window');
+    function getWindowFrame(windowId) {
+        return document.querySelector('.window[data-window="' + windowId + '"]');
+    }
+
+    function raiseWindow(frame) {
+        if (!frame || frame.classList.contains('fullscreen')) {
+            return;
         }
-        return null;
+        windowZ += 1;
+        frame.style.zIndex = String(windowZ);
     }
 
-    function getTaskbarItem(windowId) {
-        return document.querySelector(`[data-window-id="${windowId}"]`);
+    function refreshChrome(frame) {
+        if (!frame) {
+            return;
+        }
+        const floatButton = frame.querySelector('[data-action="float"]');
+        if (floatButton) {
+            const floating = frame.classList.contains('floating');
+            floatButton.dataset.state = floating ? 'floating' : 'tiled';
+            floatButton.title = floating ? 'Tile window' : 'Float window';
+            floatButton.setAttribute('aria-label', floatButton.title);
+        }
+        const maxButton = frame.querySelector('[data-action="maximize"]');
+        if (maxButton) {
+            const full = frame.classList.contains('fullscreen');
+            maxButton.dataset.state = full ? 'full' : 'windowed';
+            maxButton.title = full ? 'Restore window' : 'Maximize';
+            maxButton.setAttribute('aria-label', maxButton.title);
+        }
+        frame.dispatchEvent(new CustomEvent('window-chrome'));
     }
 
-    function addToTaskbar(windowId) {
-        const taskbar = document.getElementById('taskbar');
-        if (!taskbar) return;
-
-        // Remove existing taskbar item if present
-        removeFromTaskbar(windowId);
-
-        const config = windowConfigs[windowId];
-        if (!config) return;
-
-        const taskbarItem = document.createElement('div');
-        taskbarItem.className = 'taskbar-item';
-        taskbarItem.setAttribute('data-window-id', windowId);
-        taskbarItem.textContent = config.name;
-        taskbarItem.addEventListener('click', () => {
-            restoreWindow(windowId);
+    function syncWindowList() {
+        document.querySelectorAll('.desktop-icon').forEach((button) => {
+            const frame = getWindowFrame(button.dataset.windowId);
+            const open = Boolean(frame) && !frame.classList.contains('hidden') && !frame.classList.contains('minimized');
+            button.classList.toggle('active', open);
         });
-
-        taskbar.appendChild(taskbarItem);
-    }
-
-    function removeFromTaskbar(windowId) {
-        const taskbarItem = getTaskbarItem(windowId);
-        if (taskbarItem) {
-            taskbarItem.remove();
-        }
-    }
-
-    function updateTaskbarActive(windowId) {
-        document.querySelectorAll('.taskbar-item').forEach(item => {
-            item.classList.remove('active');
-        });
-        const taskbarItem = getTaskbarItem(windowId);
-        if (taskbarItem) {
-            taskbarItem.classList.add('active');
-        }
     }
 
     function showWindow(windowId) {
-        const window = getWindow(windowId);
-        if (window) {
-            window.classList.remove('hidden', 'minimized', 'fullscreen');
-            window.style.display = '';
-            updateTaskbarActive(windowId);
+        const frame = getWindowFrame(windowId);
+        if (!frame) {
+            return;
         }
+        frame.classList.remove('hidden', 'minimized', 'fullscreen');
+        frame.style.display = '';
+        raiseWindow(frame);
+        refreshChrome(frame);
+        syncWindowList();
     }
 
     function hideWindow(windowId) {
-        const window = getWindow(windowId);
-        if (window) {
-            window.classList.add('hidden');
-            window.style.display = 'none';
-            removeFromTaskbar(windowId);
+        const frame = getWindowFrame(windowId);
+        if (!frame) {
+            return;
         }
+        frame.classList.add('hidden');
+        frame.classList.remove('minimized', 'fullscreen');
+        frame.style.display = 'none';
+        frame.removeAttribute('data-was-fullscreen');
+        refreshChrome(frame);
+        syncWindowList();
     }
 
     function minimizeWindow(windowId) {
-        const window = getWindow(windowId);
-        if (window) {
-            // Store if it was fullscreen before minimizing
-            const wasFullscreen = window.classList.contains('fullscreen');
-            window.classList.add('minimized');
-            window.classList.remove('fullscreen');
-            window.style.display = 'none';
-            if (wasFullscreen) {
-                window.setAttribute('data-was-fullscreen', 'true');
-            }
-            addToTaskbar(windowId);
+        const frame = getWindowFrame(windowId);
+        if (!frame) {
+            return;
         }
+        if (frame.classList.contains('fullscreen')) {
+            frame.setAttribute('data-was-fullscreen', 'true');
+            frame.classList.remove('fullscreen');
+        }
+        frame.classList.add('minimized');
+        frame.classList.remove('hidden');
+        frame.style.display = 'none';
+        refreshChrome(frame);
+        syncWindowList();
     }
 
     function restoreWindow(windowId) {
-        const window = getWindow(windowId);
-        if (window) {
-            window.classList.remove('minimized', 'hidden');
-            const wasFullscreen = window.getAttribute('data-was-fullscreen') === 'true';
-            if (wasFullscreen) {
-                window.classList.add('fullscreen');
-                window.style.display = '';
-                window.removeAttribute('data-was-fullscreen');
-            } else {
-                window.style.display = '';
-            }
-            updateTaskbarActive(windowId);
+        const frame = getWindowFrame(windowId);
+        if (!frame) {
+            return;
         }
-    }
-
-    function maximizeWindow(windowId) {
-        const window = getWindow(windowId);
-        if (window) {
-            window.classList.add('fullscreen');
-            window.classList.remove('minimized', 'collapsed');
-            window.style.display = '';
-            updateTaskbarActive(windowId);
+        frame.classList.remove('minimized', 'hidden');
+        frame.style.display = '';
+        if (frame.getAttribute('data-was-fullscreen') === 'true') {
+            frame.classList.add('fullscreen');
+            frame.removeAttribute('data-was-fullscreen');
         }
+        raiseWindow(frame);
+        refreshChrome(frame);
+        syncWindowList();
     }
 
     function toggleMaximize(windowId) {
-        const window = getWindow(windowId);
-        if (window) {
-            if (window.classList.contains('fullscreen')) {
-                window.classList.remove('fullscreen');
-                if (!window.classList.contains('expanded')) {
-                    window.classList.add('expanded');
-                }
-            } else {
-                maximizeWindow(windowId);
-            }
+        const frame = getWindowFrame(windowId);
+        if (!frame) {
+            return;
         }
+        frame.classList.remove('hidden', 'minimized', 'collapsed');
+        frame.style.display = '';
+        frame.classList.toggle('fullscreen');
+        raiseWindow(frame);
+        refreshChrome(frame);
+        syncWindowList();
     }
 
-    function toggleWindow(windowId) {
-        const window = getWindow(windowId);
-        if (window) {
-            if (window.classList.contains('hidden') || window.classList.contains('minimized')) {
-                restoreWindow(windowId);
-            } else {
-                minimizeWindow(windowId);
-            }
+    function toggleFromList(windowId) {
+        const frame = getWindowFrame(windowId);
+        if (!frame) {
+            return;
         }
+        if (frame.classList.contains('hidden')) {
+            showWindow(windowId);
+            return;
+        }
+        if (frame.classList.contains('minimized')) {
+            restoreWindow(windowId);
+            return;
+        }
+        minimizeWindow(windowId);
     }
 
-    // Setup window button handlers
-    function setupWindowButtons() {
-        // Media window buttons
-        const mediaWindow = document.getElementById('media-window');
-        if (mediaWindow) {
-            const closeBtn = mediaWindow.querySelector('.window-button.close');
-            const minimizeBtn = mediaWindow.querySelector('.window-button.minimize');
-            const maximizeBtn = mediaWindow.querySelector('.window-button.maximize');
-            
-            if (closeBtn) {
-                closeBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    hideWindow('media-window');
-                });
-            }
-            
-            if (minimizeBtn) {
-                minimizeBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    minimizeWindow('media-window');
-                });
-            }
-            
-            if (maximizeBtn) {
-                maximizeBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    toggleMaximize('media-window');
-                });
-            }
+    function readPositions() {
+        const raw = readStorage(POSITION_KEY);
+        if (!raw) {
+            return {};
         }
-
-        // Image window buttons
-        const imageWindow = document.querySelector('.image-window');
-        if (imageWindow) {
-            const closeBtn = imageWindow.querySelector('.window-button.close');
-            const minimizeBtn = imageWindow.querySelector('.window-button.minimize');
-            const maximizeBtn = imageWindow.querySelector('.window-button.maximize');
-            
-            if (closeBtn) {
-                closeBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    hideWindow('image-window');
-                });
-            }
-            
-            if (minimizeBtn) {
-                minimizeBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    minimizeWindow('image-window');
-                });
-            }
-            
-            if (maximizeBtn) {
-                maximizeBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    toggleMaximize('image-window');
-                });
-            }
-        }
-
-        // Countdown window buttons
-        const countdownWindow = document.querySelector('.countdown-window');
-        if (countdownWindow) {
-            const closeBtn = countdownWindow.querySelector('.window-button.close');
-            const minimizeBtn = countdownWindow.querySelector('.window-button.minimize');
-            const maximizeBtn = countdownWindow.querySelector('.window-button.maximize');
-            
-            if (closeBtn) {
-                closeBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    hideWindow('countdown-window');
-                });
-            }
-            
-            if (minimizeBtn) {
-                minimizeBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    minimizeWindow('countdown-window');
-                });
-            }
-            
-            if (maximizeBtn) {
-                maximizeBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    toggleMaximize('countdown-window');
-                });
-            }
-        }
-
-        // Game window buttons
-        const gameWindow = document.getElementById('game-window');
-        if (gameWindow) {
-            const closeBtn = gameWindow.querySelector('.window-button.close');
-            const minimizeBtn = gameWindow.querySelector('.window-button.minimize');
-            const maximizeBtn = gameWindow.querySelector('.window-button.maximize');
-            
-            if (closeBtn) {
-                closeBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    hideWindow('game-window');
-                });
-            }
-            
-            if (minimizeBtn) {
-                minimizeBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    minimizeWindow('game-window');
-                });
-            }
-            
-            if (maximizeBtn) {
-                maximizeBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    toggleMaximize('game-window');
-                });
-            }
-        }
-    }
-
-    // Setup desktop icon handlers
-    function setupDesktopIcons() {
-        const imageViewerIcon = document.getElementById('icon-image-viewer');
-        const countdownIcon = document.getElementById('icon-countdown');
-
-        if (imageViewerIcon) {
-            imageViewerIcon.addEventListener('click', () => {
-                toggleWindow('image-window');
-            });
-        }
-
-        if (countdownIcon) {
-            countdownIcon.addEventListener('click', () => {
-                toggleWindow('countdown-window');
-            });
-        }
-    }
-
-    // Make windows active when clicked
-    function setupWindowFocus() {
-        ['media-window', 'image-window', 'countdown-window', 'game-window'].forEach(windowId => {
-            const window = getWindow(windowId);
-            if (window) {
-                window.addEventListener('mousedown', () => {
-                    updateTaskbarActive(windowId);
-                });
-            }
-        });
-    }
-
-    // Initialize on page load
-    setupWindowButtons();
-    setupDesktopIcons();
-    setupWindowFocus();
-})();
-
-// Window reorganization and persistence
-(function () {
-    const windows = {
-        'media-window': document.getElementById('media-window'),
-        'image-window': document.querySelector('.image-window'),
-        'countdown-window': document.querySelector('.countdown-window'),
-        'game-window': document.getElementById('game-window')
-    };
-
-    const STORAGE_KEY = 'window-positions';
-    let draggedWindow = null;
-    let dragOffset = { x: 0, y: 0 };
-    let isDragging = false;
-
-    // Load window positions from localStorage
-    function loadWindowPositions() {
         try {
-            const saved = localStorage.getItem(STORAGE_KEY);
-            if (saved) {
-                const positions = JSON.parse(saved);
-                const container = document.querySelector('.tiling-container');
-                if (!container) return;
-
-                Object.keys(positions).forEach(windowId => {
-                    const window = windows[windowId];
-                    if (window && positions[windowId]) {
-                        const pos = positions[windowId];
-                        if (pos.x !== undefined && pos.y !== undefined) {
-                            window.style.position = 'absolute';
-                            window.style.left = `${pos.x}px`;
-                            window.style.top = `${pos.y}px`;
-                            if (pos.width) window.style.width = `${pos.width}px`;
-                            if (pos.height) window.style.height = `${pos.height}px`;
-                            window.classList.add('draggable');
-                        }
-                    }
-                });
+            const parsed = JSON.parse(raw);
+            if (parsed && typeof parsed === 'object') {
+                return parsed;
             }
-        } catch (e) {
-            console.error('Error loading window positions:', e);
+        } catch (err) {
+            console.error('Error loading window positions:', err);
         }
+        return {};
     }
 
-    // Save window positions to localStorage
     function saveWindowPositions() {
-        try {
-            const container = document.querySelector('.tiling-container');
-            if (!container) return;
-
-            const containerRect = container.getBoundingClientRect();
-            const positions = {};
-
-            Object.keys(windows).forEach(windowId => {
-                const window = windows[windowId];
-                if (window && window.classList.contains('draggable')) {
-                    const rect = window.getBoundingClientRect();
-                    positions[windowId] = {
-                        x: rect.left - containerRect.left,
-                        y: rect.top - containerRect.top,
-                        width: rect.width,
-                        height: rect.height
-                    };
-                }
-            });
-
-            if (Object.keys(positions).length > 0) {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(positions));
-            }
-        } catch (e) {
-            console.error('Error saving window positions:', e);
+        const container = document.querySelector('.tiling-container');
+        if (!container) {
+            return;
         }
-    }
-
-    // Make window draggable
-    function makeWindowDraggable(window, windowBar) {
-        if (!window || !windowBar) return;
-
-        windowBar.addEventListener('mousedown', (e) => {
-            // Double-click to toggle draggable mode
-            if (e.detail === 2) {
-                e.preventDefault();
-                if (window.classList.contains('draggable')) {
-                    window.classList.remove('draggable');
-                    window.style.position = '';
-                    window.style.left = '';
-                    window.style.top = '';
-                    window.style.width = '';
-                    window.style.height = '';
-                } else {
-                    window.classList.add('draggable');
-                    const rect = window.getBoundingClientRect();
-                    window.style.position = 'absolute';
-                    window.style.left = `${rect.left}px`;
-                    window.style.top = `${rect.top}px`;
-                }
-                saveWindowPositions();
+        const containerRect = container.getBoundingClientRect();
+        const previous = readPositions();
+        const positions = {};
+        WINDOW_IDS.forEach((windowId) => {
+            const frame = getWindowFrame(windowId);
+            if (!frame || !frame.classList.contains('floating')) {
                 return;
             }
-
-            // Single click drag (only if window is already draggable)
-            if (window.classList.contains('draggable')) {
-                isDragging = true;
-                draggedWindow = window;
-                window.classList.add('dragging');
-
-                const container = document.querySelector('.tiling-container');
-                const containerRect = container.getBoundingClientRect();
-                const rect = window.getBoundingClientRect();
-
-                dragOffset.x = e.clientX - rect.left;
-                dragOffset.y = e.clientY - rect.top;
-
-                e.preventDefault();
-                e.stopPropagation();
+            if (frame.classList.contains('fullscreen') && previous[windowId]) {
+                positions[windowId] = previous[windowId];
+                return;
             }
+            const rect = frame.getBoundingClientRect();
+            positions[windowId] = {
+                x: rect.left - containerRect.left,
+                y: rect.top - containerRect.top,
+                width: rect.width,
+                height: rect.height
+            };
+        });
+        if (Object.keys(positions).length > 0) {
+            writeStorage(POSITION_KEY, JSON.stringify(positions));
+        } else {
+            writeStorage(POSITION_KEY, null);
+        }
+    }
+
+    function loadWindowPositions() {
+        const positions = readPositions();
+        Object.keys(positions).forEach((windowId) => {
+            const frame = getWindowFrame(windowId);
+            const pos = positions[windowId];
+            if (!frame || !pos || pos.x === undefined || pos.y === undefined) {
+                return;
+            }
+            frame.classList.add('floating');
+            frame.style.position = 'absolute';
+            frame.style.left = pos.x + 'px';
+            frame.style.top = pos.y + 'px';
+            if (pos.width) {
+                frame.style.width = pos.width + 'px';
+            }
+            if (pos.height) {
+                frame.style.height = pos.height + 'px';
+            }
+            refreshChrome(frame);
         });
     }
 
-    // Handle mouse move for dragging
-    document.addEventListener('mousemove', (e) => {
-        if (isDragging && draggedWindow) {
-            const container = document.querySelector('.tiling-container');
-            if (!container) return;
+    function floatWindow(frame) {
+        const container = document.querySelector('.tiling-container');
+        if (!container || !frame) {
+            return;
+        }
+        if (frame.classList.contains('fullscreen')) {
+            frame.classList.remove('fullscreen');
+        }
+        const containerRect = container.getBoundingClientRect();
+        const rect = frame.getBoundingClientRect();
+        frame.classList.add('floating');
+        frame.style.position = 'absolute';
+        frame.style.left = (rect.left - containerRect.left) + 'px';
+        frame.style.top = (rect.top - containerRect.top) + 'px';
+        frame.style.width = rect.width + 'px';
+        frame.style.height = Math.max(rect.height, 120) + 'px';
+        raiseWindow(frame);
+        refreshChrome(frame);
+        saveWindowPositions();
+    }
 
-            const containerRect = container.getBoundingClientRect();
+    function tileWindow(frame) {
+        frame.classList.remove('floating', 'fullscreen');
+        frame.style.position = '';
+        frame.style.left = '';
+        frame.style.top = '';
+        frame.style.width = '';
+        frame.style.height = '';
+        frame.style.zIndex = '';
+        refreshChrome(frame);
+        saveWindowPositions();
+    }
 
-            let x = e.clientX - dragOffset.x - containerRect.left;
-            let y = e.clientY - dragOffset.y - containerRect.top;
+    function toggleFloat(windowId) {
+        const frame = getWindowFrame(windowId);
+        if (!frame) {
+            return;
+        }
+        if (frame.classList.contains('floating')) {
+            tileWindow(frame);
+            return;
+        }
+        floatWindow(frame);
+    }
 
-            // Constrain to container bounds
-            const maxX = containerRect.width - draggedWindow.offsetWidth;
-            const maxY = containerRect.height - draggedWindow.offsetHeight;
+    function resetLayout() {
+        WINDOW_IDS.forEach((windowId) => {
+            const frame = getWindowFrame(windowId);
+            if (!frame) {
+                return;
+            }
+            frame.classList.remove('floating', 'fullscreen');
+            frame.style.position = '';
+            frame.style.left = '';
+            frame.style.top = '';
+            frame.style.width = '';
+            frame.style.height = '';
+            frame.style.zIndex = '';
+            refreshChrome(frame);
+        });
+        writeStorage(POSITION_KEY, null);
+        syncWindowList();
+    }
+
+    function handleWindowAction(windowId, action) {
+        switch (action) {
+            case 'float':
+                toggleFloat(windowId);
+                break;
+            case 'minimize':
+                minimizeWindow(windowId);
+                break;
+            case 'maximize':
+                toggleMaximize(windowId);
+                break;
+            case 'close':
+                hideWindow(windowId);
+                break;
+            case 'sponsor-prev':
+                window.SponsorControls.previous();
+                break;
+            case 'sponsor-next':
+                window.SponsorControls.next();
+                break;
+            case 'sponsor-pause':
+                window.SponsorControls.togglePause();
+                break;
+            default:
+                console.warn('Unknown window action:', action);
+                break;
+        }
+    }
+
+    function onPointerMove(event) {
+        if (!pointerState) {
+            return;
+        }
+        const container = document.querySelector('.tiling-container');
+        if (!container) {
+            return;
+        }
+        const containerRect = container.getBoundingClientRect();
+        if (pointerState.type === 'drag') {
+            let x = event.clientX - pointerState.offsetX - containerRect.left;
+            let y = event.clientY - pointerState.offsetY - containerRect.top;
+            const maxX = containerRect.width - pointerState.frame.offsetWidth;
+            const maxY = containerRect.height - pointerState.frame.offsetHeight;
             x = Math.max(0, Math.min(x, maxX));
             y = Math.max(0, Math.min(y, maxY));
-
-            draggedWindow.style.left = `${x}px`;
-            draggedWindow.style.top = `${y}px`;
+            pointerState.frame.style.left = x + 'px';
+            pointerState.frame.style.top = y + 'px';
+            return;
         }
-    });
-
-    // Handle mouse up to stop dragging
-    document.addEventListener('mouseup', () => {
-        if (isDragging && draggedWindow) {
-            draggedWindow.classList.remove('dragging');
-            saveWindowPositions();
+        const dx = event.clientX - pointerState.startX;
+        const dy = event.clientY - pointerState.startY;
+        const edge = pointerState.edge;
+        let left = pointerState.orig.left;
+        let top = pointerState.orig.top;
+        let width = pointerState.orig.width;
+        let height = pointerState.orig.height;
+        if (edge.indexOf('e') !== -1) {
+            width = Math.max(240, pointerState.orig.width + dx);
         }
-        isDragging = false;
-        draggedWindow = null;
-    });
-
-    // Initialize draggable windows
-    Object.keys(windows).forEach(windowId => {
-        const window = windows[windowId];
-        if (window) {
-            const windowBar = window.querySelector('.window-bar') || 
-                            window.querySelector('.media-window-bar') ||
-                            window.querySelector('.image-window-bar') ||
-                            window.querySelector('.countdown-window-bar') ||
-                            window.querySelector('.game-window-bar');
-            makeWindowDraggable(window, windowBar);
+        if (edge.indexOf('s') !== -1) {
+            height = Math.max(120, pointerState.orig.height + dy);
         }
-    });
+        if (edge.indexOf('w') !== -1) {
+            width = Math.max(240, pointerState.orig.width - dx);
+            left = pointerState.orig.left + (pointerState.orig.width - width);
+        }
+        if (edge.indexOf('n') !== -1) {
+            height = Math.max(120, pointerState.orig.height - dy);
+            top = pointerState.orig.top + (pointerState.orig.height - height);
+        }
+        pointerState.frame.style.left = left + 'px';
+        pointerState.frame.style.top = top + 'px';
+        pointerState.frame.style.width = width + 'px';
+        pointerState.frame.style.height = height + 'px';
+    }
 
-    // Load saved positions on page load
+    function onPointerUp() {
+        if (!pointerState) {
+            return;
+        }
+        pointerState.frame.classList.remove('dragging');
+        pointerState = null;
+        saveWindowPositions();
+    }
+
+    function addResizeHandles(frame) {
+        RESIZE_EDGES.forEach((edge) => {
+            const handle = document.createElement('div');
+            handle.className = 'resize-handle ' + edge;
+            handle.dataset.edge = edge;
+            handle.addEventListener('mousedown', (event) => {
+                if (!frame.classList.contains('floating') || frame.classList.contains('fullscreen')) {
+                    return;
+                }
+                event.preventDefault();
+                event.stopPropagation();
+                const container = document.querySelector('.tiling-container');
+                if (!container) {
+                    return;
+                }
+                const containerRect = container.getBoundingClientRect();
+                const rect = frame.getBoundingClientRect();
+                pointerState = {
+                    type: 'resize',
+                    frame: frame,
+                    edge: edge,
+                    startX: event.clientX,
+                    startY: event.clientY,
+                    orig: {
+                        left: rect.left - containerRect.left,
+                        top: rect.top - containerRect.top,
+                        width: rect.width,
+                        height: rect.height
+                    }
+                };
+                raiseWindow(frame);
+            });
+            frame.appendChild(handle);
+        });
+    }
+
+    function bindWindow(frame) {
+        const windowId = frame.dataset.window;
+        const bar = frame.querySelector('.window-bar');
+        frame.addEventListener('mousedown', (event) => {
+            if (event.target.closest('.resize-handle')) {
+                return;
+            }
+            raiseWindow(frame);
+        });
+        if (bar) {
+            bar.addEventListener('mousedown', (event) => {
+                if (event.target.closest('button')) {
+                    return;
+                }
+                if (event.detail === 2) {
+                    event.preventDefault();
+                    toggleMaximize(windowId);
+                    return;
+                }
+                if (!frame.classList.contains('floating') || frame.classList.contains('fullscreen')) {
+                    return;
+                }
+                const rect = frame.getBoundingClientRect();
+                pointerState = {
+                    type: 'drag',
+                    frame: frame,
+                    offsetX: event.clientX - rect.left,
+                    offsetY: event.clientY - rect.top
+                };
+                frame.classList.add('dragging');
+                event.preventDefault();
+            });
+        }
+        frame.querySelectorAll('[data-action]').forEach((button) => {
+            button.addEventListener('click', (event) => {
+                event.stopPropagation();
+                handleWindowAction(windowId, button.dataset.action);
+            });
+        });
+    }
+
+    function updateWakeButton() {
+        const button = document.getElementById('wake-status');
+        if (!button) {
+            return;
+        }
+        if (!('wakeLock' in navigator)) {
+            button.disabled = true;
+            button.classList.add('is-unavailable');
+            button.setAttribute('aria-pressed', 'false');
+            button.title = 'Wake lock unavailable';
+            return;
+        }
+        const held = Boolean(sessionState.wakeLock);
+        button.classList.remove('is-unavailable');
+        button.setAttribute('aria-pressed', held ? 'true' : 'false');
+        button.title = held ? 'Display is awake' : 'Wake lock released';
+    }
+
+    function updateFullscreenButton() {
+        const button = document.getElementById('fullscreen-toggle');
+        if (!button) {
+            return;
+        }
+        const active = Boolean(document.fullscreenElement);
+        button.setAttribute('aria-pressed', active ? 'true' : 'false');
+        button.title = active ? 'Exit fullscreen' : 'Fullscreen';
+        button.setAttribute('aria-label', button.title);
+    }
+
+    async function requestWakeLock() {
+        if (!('wakeLock' in navigator)) {
+            updateWakeButton();
+            return;
+        }
+        try {
+            sessionState.wakeLock = await navigator.wakeLock.request('screen');
+            sessionState.wakeLock.addEventListener('release', () => {
+                sessionState.wakeLock = null;
+                updateWakeButton();
+            });
+        } catch (err) {
+            sessionState.wakeLock = null;
+            console.log('Wake lock request failed:', err);
+        }
+        updateWakeButton();
+    }
+
+    async function requestDisplayFullscreen() {
+        if (document.fullscreenElement) {
+            updateFullscreenButton();
+            return;
+        }
+        try {
+            await document.documentElement.requestFullscreen();
+        } catch (err) {
+            console.log('Fullscreen request failed:', err);
+        }
+        updateFullscreenButton();
+    }
+
+    function hideSessionGate() {
+        const gate = document.getElementById('session-gate');
+        if (gate) {
+            gate.hidden = true;
+        }
+    }
+
+    function startDisplay(autoplay) {
+        sessionState.autoplay = autoplay;
+        sessionState.audioUnlocked = autoplay;
+        sessionState.wantsWake = true;
+        writeStorage('display-autoplay', autoplay ? '1' : '0');
+        writeStorage('display-session-mode', 'started');
+        hideSessionGate();
+        // Call these in the same turn as the click so the browser still treats them as a user gesture.
+        const wake = requestWakeLock();
+        const full = requestDisplayFullscreen();
+        applyVolume();
+        return Promise.all([wake, full]);
+    }
+
+    function chooseSilent() {
+        sessionState.audioUnlocked = false;
+        sessionState.wantsWake = false;
+        writeStorage('display-session-mode', 'silent');
+        if (mediaVideo) {
+            mediaVideo.pause();
+            mediaVideo.muted = true;
+        }
+        hideSessionGate();
+        applyVolume();
+    }
+
+    function configureSessionGate() {
+        const mode = readStorage('display-session-mode');
+        const gate = document.getElementById('session-gate');
+        const form = document.getElementById('session-form');
+        const startButton = document.getElementById('session-start');
+        const silentButton = document.getElementById('session-silent');
+        const copy = document.getElementById('session-copy');
+        const autoplayRow = document.getElementById('session-autoplay-row');
+        const autoplayInput = document.getElementById('session-autoplay');
+        if (!gate || !form) {
+            return;
+        }
+        if (autoplayInput) {
+            autoplayInput.checked = sessionState.autoplay;
+        }
+        if (mode === 'silent') {
+            gate.hidden = true;
+            applyVolume();
+            return;
+        }
+        gate.hidden = false;
+        if (mode === 'started') {
+            if (startButton) {
+                startButton.textContent = 'Resume display';
+            }
+            if (copy) {
+                copy.textContent = 'Resume the display to keep the screen awake and restore fullscreen.';
+            }
+            if (autoplayRow) {
+                autoplayRow.hidden = true;
+            }
+            if (silentButton) {
+                silentButton.hidden = true;
+            }
+        }
+        form.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const autoplay = mode === 'started'
+                ? sessionState.autoplay
+                : Boolean(autoplayInput && autoplayInput.checked);
+            startDisplay(autoplay);
+        });
+        if (silentButton) {
+            silentButton.addEventListener('click', () => {
+                chooseSilent();
+            });
+        }
+    }
+
+    function bindSessionControls() {
+        const slider = document.getElementById('volume-slider');
+        const muteButton = document.getElementById('volume-mute');
+        const wakeButton = document.getElementById('wake-status');
+        const fullscreenButton = document.getElementById('fullscreen-toggle');
+        const resetButton = document.getElementById('layout-reset');
+        if (slider) {
+            slider.value = String(volumeLevel);
+            slider.addEventListener('input', () => {
+                volumeLevel = Number(slider.value);
+                if (volumeLevel > 0) {
+                    volumeMuted = false;
+                }
+                applyVolume();
+            });
+        }
+        if (muteButton) {
+            muteButton.addEventListener('click', () => {
+                if (volumeMuted || volumeLevel === 0) {
+                    volumeMuted = false;
+                    if (volumeLevel === 0) {
+                        volumeLevel = 80;
+                    }
+                } else {
+                    volumeMuted = true;
+                }
+                applyVolume();
+            });
+        }
+        if (wakeButton) {
+            wakeButton.addEventListener('click', () => {
+                sessionState.wantsWake = true;
+                requestWakeLock();
+            });
+        }
+        if (fullscreenButton) {
+            fullscreenButton.addEventListener('click', () => {
+                if (document.fullscreenElement) {
+                    document.exitFullscreen().catch((err) => console.log('Exit fullscreen failed:', err));
+                    return;
+                }
+                requestDisplayFullscreen();
+            });
+        }
+        if (resetButton) {
+            resetButton.addEventListener('click', resetLayout);
+        }
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible' && sessionState.wantsWake) {
+                requestWakeLock();
+            }
+        });
+        document.addEventListener('fullscreenchange', updateFullscreenButton);
+        updateWakeButton();
+        updateFullscreenButton();
+        applyVolume();
+    }
+
+    WINDOW_IDS.forEach((windowId) => {
+        const frame = getWindowFrame(windowId);
+        if (!frame) {
+            return;
+        }
+        addResizeHandles(frame);
+        bindWindow(frame);
+    });
+    document.querySelectorAll('.desktop-icon').forEach((button) => {
+        button.addEventListener('click', () => {
+            toggleFromList(button.dataset.windowId);
+        });
+    });
+    document.addEventListener('mousemove', onPointerMove);
+    document.addEventListener('mouseup', onPointerUp);
     loadWindowPositions();
-
-    // Save positions periodically and on window resize
+    syncWindowList();
     setInterval(saveWindowPositions, 5000);
     window.addEventListener('beforeunload', saveWindowPositions);
+    configureSessionGate();
+    bindSessionControls();
+
+    window.DisplayWindows = {
+        show: showWindow,
+        hide: hideWindow,
+        minimize: minimizeWindow,
+        refresh: function(windowId) {
+            refreshChrome(getWindowFrame(windowId));
+            syncWindowList();
+        }
+    };
 })();
 
-// YouTube Audio Player Functions
 function playYouTubeAudio(url) {
-    if (!youtubeAudioPlayer) {
-        console.error('YouTube audio player element not found');
-        return;
-    }
-    
-    console.log('Playing YouTube audio:', url);
-    
     const videoId = extractYouTubeId(url);
     if (!videoId) {
         console.error('Invalid YouTube URL for audio playback:', url);
         return;
     }
-    
-    // YouTube embed URL with autoplay and audio-only parameters
-    // Start with mute=1 to ensure autoplay works, then unmute
-    // controls=0 to hide controls, modestbranding=1 for minimal UI
-    const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&modestbranding=1&rel=0&enablejsapi=1&iv_load_policy=3&fs=0`;
-    
-    youtubeAudioPlayer.src = embedUrl;
-    youtubeAudioPlayer.style.display = 'block';
-    
-    console.log('YouTube audio player iframe src set:', embedUrl);
-    
-    // Wait for iframe to load, then try to unmute
-    youtubeAudioPlayer.onload = function() {
-        console.log('YouTube audio player iframe loaded');
-        // Try to unmute after iframe loads
-        setTimeout(() => {
-            try {
-                // Attempt to unmute via postMessage (requires YouTube API)
-                youtubeAudioPlayer.contentWindow.postMessage(JSON.stringify({
-                    event: 'command',
-                    func: 'unMute',
-                    args: ''
-                }), '*');
-                console.log('Sent unmute command to YouTube player');
-            } catch (e) {
-                console.log('Could not unmute YouTube audio automatically:', e);
-            }
-        }, 2000);
-    };
+    ensureYouTubePlayer('audio', videoId);
 }
 
 function stopYouTubeAudio() {
-    if (!youtubeAudioPlayer) return;
-    youtubeAudioPlayer.src = '';
-    youtubeAudioPlayer.style.display = 'none';
+    const player = ytPlayers.audio;
+    if (player && typeof player.stopVideo === 'function') {
+        try {
+            player.stopVideo();
+        } catch (err) {
+            console.log('YouTube audio stop failed:', err);
+        }
+    }
 }
 
-// Listen for YouTube audio commands from admin
 socket.on('youtube-audio', (data) => {
     console.log('Received YouTube audio command:', data);
     if (data.action === 'play' && data.url) {
@@ -1291,5 +1775,3 @@ socket.on('youtube-audio', (data) => {
         console.warn('Unknown YouTube audio action:', data);
     }
 });
-
-

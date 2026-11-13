@@ -1,18 +1,10 @@
 {
     "name": "code-camp-slider-2025",
     "version": "1.0.0",
-    "description": "Hackathon sponsor display slider",
-    "main": "server.js",
+    "private": true,
+    "description": "CodeCamp display, public quiz sockets, and a signed-in control room.",
     "scripts": {
-        "start": "node server.js",
-        "dev": "node server.js"
-    },
-    "keywords": [],
-    "author": "",
-    "license": "ISC",
-    "dependencies": {
-        "express": "^4.18.2",
-        "express-handlebars": "^7.1.2",
-        "socket.io": "^4.6.1"
+        "start": "go run ./cmd/server",
+        "test": "go test ./..."
     }
 }

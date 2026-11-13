@@ -1,43 +1,35 @@
-# Use Node.js LTS version
-FROM node:20-alpine
+# Use a current Go toolchain. go.mod asks for 1.26.
+FROM golang:1.26-alpine AS build
 
-# Set working directory
+WORKDIR /src
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/server ./cmd/server
+
+FROM alpine:3.21
+
+RUN apk add --no-cache ca-certificates wget su-exec \
+    && adduser -D -u 1001 app
+
 WORKDIR /app
-
-# Copy package files
-COPY package*.json ./
-
-# Install dependencies
-RUN npm ci --only=production
-
-# Copy application files
-COPY server.js ./
-COPY views ./views
+COPY --from=build /out/server /app/server
+COPY templates ./templates
 COPY public ./public
 COPY logos ./logos
-COPY pixel-bg.svg ./
-COPY 9nlGN0.gif ./
+COPY pixel-bg.svg 9nlGN0.gif ./
+COPY docker-entrypoint.sh /docker-entrypoint.sh
 
-# Create a non-root user for security
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nodejs -u 1001
+RUN chmod +x /docker-entrypoint.sh \
+    && mkdir -p /app/data \
+    && chown -R app:app /app
 
-# Change ownership of the app directory
-RUN chown -R nodejs:nodejs /app
+ENV PORT=80 \
+    DATA_DIR=/app/data
 
-# Switch to non-root user
-USER nodejs
-
-# Expose port 80 (will be mapped by Coolify)
 EXPOSE 80
 
-# Set PORT environment variable to 80
-ENV PORT=80
-
-# Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:80', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+    CMD wget -q -O /dev/null http://127.0.0.1:80/healthz
 
-# Start the application
-CMD ["node", "server.js"]
-
+ENTRYPOINT ["/docker-entrypoint.sh"]
