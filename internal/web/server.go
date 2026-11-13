@@ -5,10 +5,12 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"html/template"
 	"log"
 	"net"
 	"net/http"
+	"net/url"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -23,6 +25,7 @@ import (
 	"github.com/brentdalling/code-camp-slider-2025/internal/settings"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/skip2/go-qrcode"
 )
 
 const csrfCookie = "cc_csrf"
@@ -83,6 +86,7 @@ func (s *Server) Router() http.Handler {
 	})
 	router.Get("/", s.index)
 	router.Get("/game", s.gamePage)
+	router.Get("/qr", s.gameQR)
 	router.Get("/setup", s.setupForm)
 	router.Post("/setup", s.setup)
 	router.Get("/login", s.loginForm)
@@ -104,6 +108,7 @@ func (s *Server) Router() http.Handler {
 	})
 	router.Post("/admin/settings", s.saveSettings)
 	router.Post("/admin/logos", s.createLogo)
+	router.Post("/admin/logos/bulk", s.createLogos)
 	router.Post("/admin/logos/{id}/delete", s.deleteLogo)
 	router.Post("/admin/users", s.createUser)
 	router.Post("/admin/users/{id}/delete", s.deleteUser)
@@ -163,7 +168,54 @@ func (s *Server) index(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) gamePage(w http.ResponseWriter, r *http.Request) {
 	setAppCSP(w, nonceFrom(r))
-	s.render(w, "game.html", nil)
+	title := "CodeCamp Quiz"
+	if _, name, ok := s.hub.PublicGame(r.URL.Query().Get("game")); ok && name != "" {
+		title = name
+	}
+	s.render(w, "game.html", map[string]any{"Title": title})
+}
+
+func (s *Server) gameQR(w http.ResponseWriter, r *http.Request) {
+	gameID, _, ok := s.hub.PublicGame(r.URL.Query().Get("game"))
+	if !ok {
+		http.NotFound(w, r)
+		return
+	}
+	png, err := qrcode.Encode(publicGameURL(r, gameID), qrcode.Medium, 512)
+	if err != nil {
+		http.Error(w, "could not build qr code", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "image/png")
+	w.Header().Set("Cache-Control", "no-store")
+	_, _ = w.Write(png)
+}
+
+func publicGameURL(r *http.Request, gameID string) string {
+	scheme := "http"
+	if r.TLS != nil {
+		scheme = "https"
+	}
+	if forwarded := forwardedProto(r.Header.Get("X-Forwarded-Proto")); forwarded != "" {
+		scheme = forwarded
+	}
+	return (&url.URL{
+		Scheme:   scheme,
+		Host:     r.Host,
+		Path:     "/game",
+		RawQuery: "game=" + url.QueryEscape(gameID),
+	}).String()
+}
+
+func forwardedProto(header string) string {
+	proto, _, _ := strings.Cut(header, ",")
+	proto = strings.ToLower(strings.TrimSpace(proto))
+	switch proto {
+	case "http", "https":
+		return proto
+	default:
+		return ""
+	}
 }
 
 func (s *Server) setupForm(w http.ResponseWriter, r *http.Request) {
@@ -292,7 +344,7 @@ func (s *Server) renderAdmin(w http.ResponseWriter, r *http.Request, section str
 		Role:    roleLabel(identity.User.Role),
 		IsAdmin: identity.User.IsAdmin(),
 		Section: section,
-		Notice:  adminNotice(r.URL.Query().Get("notice")),
+		Notice:  adminNotice(r.URL.Query()),
 		Error:   adminError(r.URL.Query().Get("error")),
 	}
 	switch section {
@@ -488,6 +540,56 @@ func (s *Server) createLogo(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, adminPath("logos", "notice=logo"), http.StatusSeeOther)
 }
 
+func (s *Server) createLogos(w http.ResponseWriter, r *http.Request) {
+	if _, ok := s.requireUser(w, r); !ok {
+		return
+	}
+	if !csrfMultipartLimit(w, r, maxBulkLogoBody) {
+		return
+	}
+	seconds, err := strconv.Atoi(strings.TrimSpace(r.FormValue("seconds")))
+	if err != nil {
+		http.Redirect(w, r, adminPath("logos", "error=duration"), http.StatusSeeOther)
+		return
+	}
+	var files int
+	if r.MultipartForm != nil {
+		files = len(r.MultipartForm.File["logos"])
+	}
+	if files == 0 || files > maxBulkLogos {
+		http.Redirect(w, r, adminPath("logos", "error=image"), http.StatusSeeOther)
+		return
+	}
+	event := r.FormValue("event")
+	saved := 0
+	skipped := 0
+	for _, header := range r.MultipartForm.File["logos"] {
+		file, openErr := header.Open()
+		if openErr != nil {
+			skipped++
+			continue
+		}
+		_, createErr := s.logos.Create(event, seconds, file)
+		_ = file.Close()
+		if createErr == nil {
+			saved++
+			continue
+		}
+		if errors.Is(createErr, logos.ErrEvent) || errors.Is(createErr, logos.ErrDuration) {
+			http.Redirect(w, r, adminPath("logos", "error="+logoErrorCode(createErr)), http.StatusSeeOther)
+			return
+		}
+		skipped++
+	}
+	if saved == 0 {
+		http.Redirect(w, r, adminPath("logos", "error=image"), http.StatusSeeOther)
+		return
+	}
+	s.pushSponsors()
+	query := fmt.Sprintf("notice=logos&saved=%d&skipped=%d", saved, skipped)
+	http.Redirect(w, r, adminPath("logos", query), http.StatusSeeOther)
+}
+
 func (s *Server) deleteLogo(w http.ResponseWriter, r *http.Request) {
 	if _, ok := s.requireUser(w, r); !ok {
 		return
@@ -637,10 +739,18 @@ func csrfOK(w http.ResponseWriter, r *http.Request) bool {
 	return true
 }
 
-const maxLogoBody = 8 << 20
+const (
+	maxLogoBody     = 8 << 20
+	maxBulkLogoBody = 64 << 20
+	maxBulkLogos    = 30
+)
 
 func csrfMultipart(w http.ResponseWriter, r *http.Request) bool {
-	r.Body = http.MaxBytesReader(w, r.Body, maxLogoBody)
+	return csrfMultipartLimit(w, r, maxLogoBody)
+}
+
+func csrfMultipartLimit(w http.ResponseWriter, r *http.Request, limit int64) bool {
+	r.Body = http.MaxBytesReader(w, r.Body, limit)
 	if err := r.ParseMultipartForm(1 << 20); err != nil {
 		http.Error(w, "invalid form", http.StatusBadRequest)
 		return false
@@ -886,8 +996,8 @@ func setupError(code string) string {
 	}
 }
 
-func adminNotice(code string) string {
-	switch code {
+func adminNotice(query url.Values) string {
+	switch query.Get("notice") {
 	case "welcome":
 		return "Admin account created. This dashboard is now private."
 	case "user-created":
@@ -898,11 +1008,29 @@ func adminNotice(code string) string {
 		return "Room settings saved. The display will update."
 	case "logo":
 		return "Logo saved. The display will show it for that event."
+	case "logos":
+		return bulkLogoNotice(query.Get("saved"), query.Get("skipped"))
 	case "logo-deleted":
 		return "Logo removed."
 	default:
 		return ""
 	}
+}
+
+func bulkLogoNotice(savedRaw, skippedRaw string) string {
+	saved, err := strconv.Atoi(savedRaw)
+	if err != nil || saved < 1 {
+		return "Logos saved."
+	}
+	notice := "Saved 1 logo."
+	if saved != 1 {
+		notice = fmt.Sprintf("Saved %d logos.", saved)
+	}
+	skipped, err := strconv.Atoi(skippedRaw)
+	if err != nil || skipped < 1 {
+		return notice
+	}
+	return notice + fmt.Sprintf(" %d could not be read.", skipped)
 }
 
 func adminError(code string) string {

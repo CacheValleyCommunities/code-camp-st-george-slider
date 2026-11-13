@@ -198,6 +198,26 @@
                     </div>
                     <button type="submit" class="ok" id="logo-save" disabled>Save logo</button>
                 </form>
+                <form id="logo-bulk-form" method="post" action="/admin/logos/bulk" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf" value="{{.CSRF}}">
+                    <h2>Upload several</h2>
+                    <p>These images are saved whole, without the crop tool. One upload can include up to 30 images and 64MB. PNG, JPEG, or GIF.</p>
+                    <div class="field">
+                        <label for="logo-bulk-file">Images</label>
+                        <input id="logo-bulk-file" name="logos" type="file" accept="image/png,image/jpeg,image/gif" multiple required>
+                    </div>
+                    <div class="grid">
+                        <div class="field">
+                            <label for="logo-bulk-event">Event</label>
+                            <input id="logo-bulk-event" name="event" type="text" maxlength="80" required value="{{.LogoEvent}}" list="logo-events">
+                        </div>
+                        <div class="field">
+                            <label for="logo-bulk-seconds">Display time, in seconds</label>
+                            <input id="logo-bulk-seconds" name="seconds" type="number" min="1" max="600" step="1" required value="15">
+                        </div>
+                    </div>
+                    <button type="submit" class="ok">Upload logos</button>
+                </form>
                 <table>
                     <thead>
                         <tr><th></th><th>Event</th><th>Seconds</th><th></th></tr>

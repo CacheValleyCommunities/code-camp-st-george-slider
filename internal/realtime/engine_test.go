@@ -70,6 +70,47 @@ func TestGameSocketCannotStartAndAnswerScores(t *testing.T) {
 	engine.Stop()
 }
 
+func TestSelectNotifiesDisplay(t *testing.T) {
+	engine := NewEngine(GamesFile{Games: []Game{
+		{ID: "quiz", Name: "Quiz"},
+		{ID: "other", Name: "Other"},
+	}})
+	bus := &memBus{}
+	engine.SetBus(bus)
+
+	engine.AnnounceSelected(&Client{})
+	first := bus.find("game-selected")
+	if first == nil {
+		t.Fatal("display connect did not receive a quiz")
+	}
+	payload, _ := first.Data.(map[string]string)
+	if payload["id"] != "quiz" || payload["name"] != "Quiz" {
+		t.Fatalf("default selection = %#v", first.Data)
+	}
+
+	engine.Select("other")
+	if bus.count("game-selected") != 2 {
+		t.Fatalf("game-selected count = %d", bus.count("game-selected"))
+	}
+	selected := bus.msgs[len(bus.msgs)-1]
+	payload, _ = selected.Data.(map[string]string)
+	if selected.Type != "game-selected" || payload["id"] != "other" || payload["name"] != "Other" {
+		t.Fatalf("selected = %#v", selected)
+	}
+
+	engine.Select("missing")
+	if bus.count("game-selected") != 2 {
+		t.Fatal("unknown quiz changed the selection")
+	}
+	id, name, ok := engine.PublicGame(" other ")
+	if !ok || id != "other" || name != "Other" {
+		t.Fatalf("public game = %q %q %v", id, name, ok)
+	}
+	if _, _, ok = engine.PublicGame("missing"); ok {
+		t.Fatal("unknown quiz was published")
+	}
+}
+
 func TestYouTubeURL(t *testing.T) {
 	if !IsYouTubeURL("https://www.youtube.com/watch?v=jfKfPfyJRdk") {
 		t.Fatal("expected youtube url")

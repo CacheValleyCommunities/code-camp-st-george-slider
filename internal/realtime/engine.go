@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 )
@@ -156,9 +157,26 @@ func (e *Engine) Select(gameID string) {
 		return
 	}
 	e.gameID = gameID
-	msgs := e.gameListLocked(nil)
+	msgs := append(e.gameListLocked(nil), e.selectedMsg(nil)...)
 	e.mu.Unlock()
 	e.flush(msgs)
+}
+
+func (e *Engine) AnnounceSelected(c *Client) {
+	e.mu.Lock()
+	msgs := e.selectedMsg(c)
+	e.mu.Unlock()
+	e.flush(msgs)
+}
+
+func (e *Engine) PublicGame(id string) (string, string, bool) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	game := e.find(strings.TrimSpace(id))
+	if game == nil || game.ID == "" {
+		return "", "", false
+	}
+	return game.ID, game.Name, true
 }
 
 func (e *Engine) Start(c *Client, gameID string) {
@@ -422,6 +440,21 @@ func (e *Engine) find(id string) *Game {
 		}
 	}
 	return nil
+}
+
+func (e *Engine) selectedMsg(to *Client) []outMsg {
+	game := e.find(e.gameID)
+	if game == nil && len(e.games) > 0 {
+		game = &e.games[0]
+	}
+	if game == nil || game.ID == "" {
+		return nil
+	}
+	payload := map[string]string{"id": game.ID, "name": game.Name}
+	if to != nil {
+		return []outMsg{clientMsg(to, "game-selected", payload)}
+	}
+	return []outMsg{displayMsg("game-selected", payload)}
 }
 
 func (e *Engine) armLocked(delay time.Duration, kind string) {

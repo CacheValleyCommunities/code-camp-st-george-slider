@@ -21,6 +21,7 @@ import (
 	"github.com/brentdalling/code-camp-slider-2025/internal/realtime"
 	"github.com/brentdalling/code-camp-slider-2025/internal/settings"
 	"github.com/gorilla/websocket"
+	"github.com/skip2/go-qrcode"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -182,6 +183,63 @@ func TestDashboardAuthAndPublicGameSocket(t *testing.T) {
 	}
 }
 
+func TestGameQRAndTitle(t *testing.T) {
+	app := newTestApp(t)
+	ts := httptest.NewServer(app.Router())
+	t.Cleanup(ts.Close)
+
+	res, err := http.Get(ts.URL + "/qr?game=quiz")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer res.Body.Close()
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res.StatusCode != http.StatusOK || res.Header.Get("Content-Type") != "image/png" {
+		t.Fatalf("qr status %d type %s", res.StatusCode, res.Header.Get("Content-Type"))
+	}
+	want, err := qrcode.Encode(ts.URL+"/game?game=quiz", qrcode.Medium, 512)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(body, want) {
+		t.Fatalf("qr png = %d bytes, want %d", len(body), len(want))
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/qr?game=quiz", nil)
+	req.Host = "display.example:3000"
+	req.Header.Set("X-Forwarded-Proto", "https, http")
+	rec := httptest.NewRecorder()
+	app.Router().ServeHTTP(rec, req)
+	forwarded, err := qrcode.Encode("https://display.example:3000/game?game=quiz", qrcode.Medium, 512)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rec.Code != http.StatusOK || !bytes.Equal(rec.Body.Bytes(), forwarded) {
+		t.Fatalf("forwarded qr status %d bytes %d", rec.Code, rec.Body.Len())
+	}
+
+	missing, err := http.Get(ts.URL + "/qr?game=missing")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer missing.Body.Close()
+	if missing.StatusCode != http.StatusNotFound {
+		t.Fatalf("unknown qr = %d", missing.StatusCode)
+	}
+
+	named := get(t, http.DefaultClient, ts.URL+"/game?game=quiz")
+	if !strings.Contains(named, "<h1>Quiz</h1>") || !strings.Contains(named, "<title>Quiz</title>") {
+		t.Fatalf("named game page = %s", named)
+	}
+	plain := get(t, http.DefaultClient, ts.URL+"/game?game=nope")
+	if !strings.Contains(plain, "<h1>CodeCamp Quiz</h1>") {
+		t.Fatalf("unknown game page = %s", plain)
+	}
+}
+
 func TestDisplayReadsRoomSettings(t *testing.T) {
 	app := newTestApp(t)
 	ts := httptest.NewServer(app.Router())
@@ -338,6 +396,102 @@ func TestLogosFollowTheCurrentEvent(t *testing.T) {
 	if !strings.Contains(adminPage, "Other Camp") || !strings.Contains(adminPage, "CodeCamp 2025") {
 		t.Fatal("admin list is missing a saved logo")
 	}
+}
+
+func TestBulkLogoUpload(t *testing.T) {
+	app := newTestApp(t)
+	ts := httptest.NewServer(app.Router())
+	t.Cleanup(ts.Close)
+
+	jar, err := cookiejar.New(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	client := &http.Client{Jar: jar}
+	setupPage := get(t, client, ts.URL+"/setup")
+	postForm(t, client, ts.URL+"/setup", url.Values{
+		"email":    {"admin@example.com"},
+		"password": {"password123"},
+		"csrf":     {csrfToken(t, setupPage)},
+	})
+	adminPage := get(t, client, ts.URL+"/admin/logos")
+	if !strings.Contains(adminPage, `id="logo-bulk-file"`) || !strings.Contains(adminPage, "multiple") {
+		t.Fatal("admin page is missing the bulk logo form")
+	}
+	png := testPNG(t)
+	page := postBulkLogos(t, client, ts.URL+"/admin/logos/bulk", csrfToken(t, adminPage), "CodeCamp 2025", "21", []bulkFile{
+		{name: "one.png", body: png},
+		{name: "notes.txt", body: []byte("not an image")},
+		{name: "two.png", body: png},
+	})
+	if !strings.Contains(page, "Saved 2 logos. 1 could not be read.") {
+		t.Fatalf("bulk notice = %s", page)
+	}
+	if strings.Count(page, `class="logo-thumb"`) != 2 || strings.Count(page, "<td>21</td>") != 2 {
+		t.Fatalf("bulk list = %s", page)
+	}
+	display := get(t, client, ts.URL+"/")
+	if strings.Count(display, `"seconds":21`) != 2 {
+		t.Fatalf("display logos = %s", display)
+	}
+	if len(regexp.MustCompile(`/logos/[0-9a-f-]{36}\.png`).FindAllString(display, -1)) != 2 {
+		t.Fatalf("display logo urls = %s", display)
+	}
+
+	adminPage = get(t, client, ts.URL+"/admin/logos")
+	empty := postBulkLogos(t, client, ts.URL+"/admin/logos/bulk", csrfToken(t, adminPage), "CodeCamp 2025", "21", nil)
+	if !strings.Contains(empty, "Choose a PNG, JPEG, or GIF image.") {
+		t.Fatalf("empty bulk upload = %s", empty)
+	}
+	if strings.Count(empty, `class="logo-thumb"`) != 2 {
+		t.Fatal("empty upload changed the saved logos")
+	}
+}
+
+type bulkFile struct {
+	name string
+	body []byte
+}
+
+func postBulkLogos(t *testing.T, client *http.Client, rawURL, csrf, event, seconds string, files []bulkFile) string {
+	t.Helper()
+	var body bytes.Buffer
+	writer := multipart.NewWriter(&body)
+	for _, field := range [][2]string{{"csrf", csrf}, {"event", event}, {"seconds", seconds}} {
+		if err := writer.WriteField(field[0], field[1]); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for _, file := range files {
+		part, err := writer.CreateFormFile("logos", file.name)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := part.Write(file.body); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := writer.Close(); err != nil {
+		t.Fatal(err)
+	}
+	req, err := http.NewRequest(http.MethodPost, rawURL, &body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	res, err := client.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer res.Body.Close()
+	page, err := io.ReadAll(res.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res.StatusCode != http.StatusOK {
+		t.Fatalf("bulk upload status %d: %s", res.StatusCode, page)
+	}
+	return string(page)
 }
 
 func postLogo(t *testing.T, client *http.Client, rawURL, csrf, event, seconds string) {

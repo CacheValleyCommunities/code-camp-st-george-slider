@@ -77,8 +77,6 @@ function applyRoomSettings(data) {
 // Announcements Ticker
 (function() {
 
-    let gameLink = window.location.origin + '/game';
-    document.getElementById('game-link').textContent = gameLink;
     const tickerContent = document.getElementById('ticker-content');
     let announcements = roomAnnouncements();
 
@@ -593,6 +591,29 @@ socket.on('disconnect', () => {
 (function() {
     const gameWindow = document.getElementById('game-window');
     if (!gameWindow) return;
+
+    function showSelectedGame(data) {
+        if (!data || typeof data.id !== "string" || data.id === "") {
+            return;
+        }
+        const url = window.location.origin + "/game?game=" + encodeURIComponent(data.id);
+        const link = document.getElementById("game-link");
+        if (link) {
+            link.textContent = url;
+        }
+        const title = document.getElementById("game-waiting-title");
+        if (title && typeof data.name === "string" && data.name !== "") {
+            title.textContent = data.name;
+        }
+        const qr = document.getElementById("game-qr");
+        if (qr) {
+            qr.src = "/qr?game=" + encodeURIComponent(data.id);
+            qr.alt = (typeof data.name === "string" && data.name !== "" ? data.name : "Game") + " QR code";
+            qr.hidden = false;
+        }
+    }
+
+    socket.on("game-selected", showSelectedGame);
 
     let currentQuestion = null;
     let countdownInterval = null;

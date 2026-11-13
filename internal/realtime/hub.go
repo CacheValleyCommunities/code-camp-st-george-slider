@@ -115,7 +115,14 @@ func (h *Hub) register(client *Client) {
 	if client.kind == KindAdmin {
 		h.engine.Snapshot(client)
 	}
+	if client.kind == KindDisplay {
+		h.engine.AnnounceSelected(client)
+	}
 	client.readPump()
+}
+
+func (h *Hub) PublicGame(id string) (string, string, bool) {
+	return h.engine.PublicGame(id)
 }
 
 func (h *Hub) unregister(client *Client) {
