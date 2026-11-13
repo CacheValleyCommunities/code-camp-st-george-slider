@@ -119,6 +119,7 @@ func (s *Server) Router() http.Handler {
 	router.Handle("/css/*", staticDir("/css/", filepath.Join(s.root, "public", "css")))
 	router.Handle("/js/*", staticDir("/js/", filepath.Join(s.root, "public", "js")))
 	router.Handle("/images/*", staticDir("/images/", filepath.Join(s.root, "public", "images")))
+	router.Handle("/vendor/*", staticDir("/vendor/", filepath.Join(s.root, "public", "vendor")))
 	router.Get("/logos/{name}", s.serveLogo)
 	router.Get("/9nlGN0.gif", s.serveRootFile("9nlGN0.gif"))
 	router.Get("/pixel-bg.svg", s.serveRootFile("pixel-bg.svg"))
@@ -347,20 +348,19 @@ func (s *Server) renderAdmin(w http.ResponseWriter, r *http.Request, section str
 		Notice:  adminNotice(r.URL.Query()),
 		Error:   adminError(r.URL.Query().Get("error")),
 	}
+	if !s.fillRoom(w, &page) {
+		return
+	}
 	switch section {
-	case "settings":
-		if !s.fillRoom(w, &page) {
-			return
-		}
 	case "logos":
-		if !s.fillRoom(w, &page) || !s.fillLogos(w, &page) {
+		if !s.fillLogos(w, &page) {
 			return
 		}
 	case "users":
 		if !s.fillUsers(w, &page, identity) {
 			return
 		}
-	case "display", "game", "video", "image", "text", "audio", "notifications", "players":
+	case "settings", "display", "game", "video", "image", "text", "audio", "notifications", "players":
 	default:
 		http.NotFound(w, r)
 		return
@@ -961,6 +961,44 @@ type adminPage struct {
 	DayCampEnd   string
 	Camp24End    string
 	Ticker       string
+}
+
+func (p adminPage) ShowPage() bool {
+	switch p.Section {
+	case "display", "game", "video", "image", "text", "audio", "notifications", "players":
+		return true
+	default:
+		return false
+	}
+}
+
+func (p adminPage) Heading() string {
+	switch p.Section {
+	case "display":
+		return "Show"
+	case "game":
+		return "Quiz"
+	case "video":
+		return "Video"
+	case "image":
+		return "Image"
+	case "text":
+		return "Text"
+	case "audio":
+		return "Audio"
+	case "notifications":
+		return "Notifications"
+	case "players":
+		return "Players"
+	case "settings":
+		return "Room"
+	case "logos":
+		return "Logos"
+	case "users":
+		return "Access"
+	default:
+		return "Show"
+	}
 }
 
 type logoRow struct {

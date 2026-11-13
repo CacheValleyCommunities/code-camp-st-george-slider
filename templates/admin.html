@@ -4,351 +4,473 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex">
-    <title>CodeCamp Control</title>
+    <title>{{.Heading}} · CodeCamp Control</title>
+    <link rel="stylesheet" href="/vendor/argon/css/nucleo-icons.css">
+    <link rel="stylesheet" href="/vendor/argon/css/argon-dashboard.min.css">
     <link rel="stylesheet" href="/css/admin.css">
 </head>
-<body>
-    <div class="shell">
-        <header class="topbar">
-            <div>
-                <div class="brand">CodeCamp 2025</div>
-                <h1>Control room</h1>
-                <div class="status" id="status"><span class="dot"></span><span id="status-text">Display link disconnected</span></div>
+<body class="g-sidenav-show bg-gray-100 dark-version" data-section="{{.Section}}">
+    <div class="sidenav-backdrop" id="sidenav-backdrop"></div>
+    <aside class="sidenav navbar navbar-vertical navbar-expand-xs border-0 border-radius-xl my-3 fixed-start ms-4" id="sidenav-main">
+        <div class="sidenav-header">
+            <button type="button" class="btn btn-link text-white d-xl-none position-absolute end-0 top-0" id="iconSidenav" aria-label="Close menu">
+                <i class="ni ni-fat-remove" aria-hidden="true"></i>
+            </button>
+            <a class="navbar-brand m-0" href="/admin">
+                <span class="fw-bold">CodeCamp</span>
+            </a>
+        </div>
+        <hr class="horizontal light mt-0">
+        <div class="collapse navbar-collapse w-auto" id="sidenav-collapse-main">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link{{if .ShowPage}} active{{end}}" href="/admin"{{if .ShowPage}} aria-current="page"{{end}}>
+                        <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
+                            <i class="ni ni-tv-2 text-white text-sm opacity-10" aria-hidden="true"></i>
+                        </div>
+                        <span class="nav-link-text ms-1">Show</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link{{if eq .Section "settings"}} active{{end}}" href="/admin/settings"{{if eq .Section "settings"}} aria-current="page"{{end}}>
+                        <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
+                            <i class="ni ni-world-2 text-white text-sm opacity-10" aria-hidden="true"></i>
+                        </div>
+                        <span class="nav-link-text ms-1">Room</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link{{if eq .Section "logos"}} active{{end}}" href="/admin/logos"{{if eq .Section "logos"}} aria-current="page"{{end}}>
+                        <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
+                            <i class="ni ni-image text-white text-sm opacity-10" aria-hidden="true"></i>
+                        </div>
+                        <span class="nav-link-text ms-1">Logos</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link{{if eq .Section "users"}} active{{end}}" href="/admin/users"{{if eq .Section "users"}} aria-current="page"{{end}}>
+                        <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
+                            <i class="ni ni-single-02 text-white text-sm opacity-10" aria-hidden="true"></i>
+                        </div>
+                        <span class="nav-link-text ms-1">Access</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </aside>
+    <main class="main-content position-relative border-radius-lg">
+        <nav class="navbar navbar-main navbar-expand-lg px-0 mx-3 shadow-none border-radius-xl" id="navbarBlur" data-scroll="false">
+            <div class="container-fluid py-1 px-2 control-bar">
+                <div class="min-w-0">
+                    <h1 class="h5 text-white mb-0">{{.Heading}}</h1>
+                    <div class="text-sm text-white event-title">{{.EventTitle}}</div>
+                </div>
+                <div class="d-flex flex-wrap align-items-center gap-3 ms-auto">
+                    <div class="status text-white" id="status">
+                        <span class="dot"></span>
+                        <span id="status-text">Display link disconnected</span>
+                    </div>
+                    <div class="text-white text-sm text-end who">
+                        <strong class="d-block">{{.Email}}</strong>
+                        <span>{{.Role}}</span>
+                    </div>
+                    <form method="post" action="/logout" class="m-0">
+                        <input type="hidden" name="csrf" value="{{.CSRF}}">
+                        <button type="submit" class="btn btn-sm btn-outline-light">Sign out</button>
+                    </form>
+                    <button type="button" class="btn btn-link text-white d-xl-none p-0" id="iconNavbarSidenav" aria-label="Open menu" aria-controls="sidenav-main" aria-expanded="false">
+                        <div class="sidenav-toggler-inner">
+                            <i class="sidenav-toggler-line bg-white"></i>
+                            <i class="sidenav-toggler-line bg-white"></i>
+                            <i class="sidenav-toggler-line bg-white"></i>
+                        </div>
+                    </button>
+                </div>
             </div>
-            <div class="who">
-                <strong>{{.Email}}</strong>
-                <span>{{.Role}}</span>
-                <form method="post" action="/logout" class="actions" style="margin-top: 10px; justify-content: flex-end;">
-                    <input type="hidden" name="csrf" value="{{.CSRF}}">
-                    <button type="submit">Sign out</button>
-                </form>
-            </div>
-        </header>
-
-        {{if .Notice}}<div class="banner good">{{.Notice}}</div>{{end}}
-        {{if .Error}}<div class="banner bad">{{.Error}}</div>{{end}}
-
-        <nav class="admin-nav" aria-label="Control room">
-            <a href="/admin"{{if eq .Section "display"}} class="active" aria-current="page"{{end}}>Display</a>
-            <a href="/admin/game"{{if eq .Section "game"}} class="active" aria-current="page"{{end}}>Game</a>
-            <a href="/admin/video"{{if eq .Section "video"}} class="active" aria-current="page"{{end}}>Video</a>
-            <a href="/admin/image"{{if eq .Section "image"}} class="active" aria-current="page"{{end}}>Image</a>
-            <a href="/admin/text"{{if eq .Section "text"}} class="active" aria-current="page"{{end}}>Text</a>
-            <a href="/admin/settings"{{if eq .Section "settings"}} class="active" aria-current="page"{{end}}>Room</a>
-            <a href="/admin/logos"{{if eq .Section "logos"}} class="active" aria-current="page"{{end}}>Logos</a>
-            <a href="/admin/audio"{{if eq .Section "audio"}} class="active" aria-current="page"{{end}}>Audio</a>
-            <a href="/admin/notifications"{{if eq .Section "notifications"}} class="active" aria-current="page"{{end}}>Notifications</a>
-            <a href="/admin/players"{{if eq .Section "players"}} class="active" aria-current="page"{{end}}>Players</a>
-            <a href="/admin/users"{{if eq .Section "users"}} class="active" aria-current="page"{{end}}>Access</a>
         </nav>
+        <div class="container-fluid py-3 px-3">
+            {{if .Notice}}<div class="alert alert-success banner good" role="status">{{.Notice}}</div>{{end}}
+            {{if .Error}}<div class="alert alert-danger banner bad" role="alert">{{.Error}}</div>{{end}}
 
-        <div class="page">
-            {{if eq .Section "display"}}
-            <section class="panel">
-                <h2>Display window</h2>
-                <div class="row">
-                    <button type="button" id="show-window">Show</button>
-                    <button type="button" id="hide-window">Hide</button>
-                    <button type="button" id="toggle-window">Toggle</button>
+            {{if .ShowPage}}
+            <nav class="show-jump" aria-label="Show sections">
+                <a class="btn btn-sm {{if eq .Section "display"}}btn-primary{{else}}btn-outline-light{{end}}" href="#panel-display">Window</a>
+                <a class="btn btn-sm {{if or (eq .Section "game") (eq .Section "players")}}btn-primary{{else}}btn-outline-light{{end}}" href="#panel-game">Quiz</a>
+                <a class="btn btn-sm {{if or (eq .Section "video") (eq .Section "image") (eq .Section "text")}}btn-primary{{else}}btn-outline-light{{end}}" href="#panel-screen">Screen</a>
+                <a class="btn btn-sm {{if eq .Section "audio"}}btn-primary{{else}}btn-outline-light{{end}}" href="#panel-audio">Audio</a>
+                <a class="btn btn-sm {{if eq .Section "notifications"}}btn-primary{{else}}btn-outline-light{{end}}" href="#panel-notifications">Alerts</a>
+            </nav>
+            <div class="card mb-3" id="panel-display">
+                <div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-2">
+                    <h2 class="h6 mb-0">Display window</h2>
+                    <div class="d-flex flex-wrap gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-light" id="show-window">Show</button>
+                        <button type="button" class="btn btn-sm btn-outline-light" id="hide-window">Hide</button>
+                        <button type="button" class="btn btn-sm btn-outline-light" id="toggle-window">Toggle</button>
+                    </div>
                 </div>
-            </section>
-            {{end}}
-
-            {{if eq .Section "game"}}
-            <section class="panel">
-                <h2>Game</h2>
-                <div class="field">
-                    <label for="game-select">Quiz</label>
-                    <select id="game-select"><option value="">Loading quizzes...</option></select>
+            </div>
+            <div class="row g-3 mb-3">
+                <div class="col-lg-7" id="panel-game">
+                    <div class="card">
+                        <div class="card-body">
+                            <h2 class="h6 mb-3">Quiz</h2>
+                            <div class="field">
+                                <select id="game-select" class="form-select form-select-sm" aria-label="Quiz"><option value="">Loading quizzes...</option></select>
+                            </div>
+                            <div class="d-flex flex-wrap gap-2">
+                                <button type="button" class="btn btn-sm btn-success" id="start-game">Start</button>
+                                <button type="button" class="btn btn-sm btn-danger" id="stop-game">Stop</button>
+                                <button type="button" class="btn btn-sm btn-outline-light" id="toggle-game">Game window</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="row">
-                    <button type="button" class="ok" id="start-game">Start</button>
-                    <button type="button" class="danger" id="stop-game">Stop</button>
-                    <button type="button" id="toggle-game">Game window</button>
+                <div class="col-lg-5" id="panel-players">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-baseline gap-2">
+                                <h2 class="h6 mb-0">Players on the quiz</h2>
+                                <span class="text-sm">Joined: <strong id="player-count">0</strong></span>
+                            </div>
+                            <p class="text-sm mb-2">The quiz socket is public. No player account is required.</p>
+                            <div class="player-list" id="player-list"><div class="player">No players connected</div></div>
+                        </div>
+                    </div>
                 </div>
-            </section>
-            {{end}}
-
-            {{if eq .Section "video"}}
-            <section class="panel">
-                <h2>Video</h2>
-                <div class="field">
-                    <label for="video-url">YouTube or video file URL</label>
-                    <input id="video-url" type="text" placeholder="https://youtube.com/watch?v=...">
+            </div>
+            <div class="row g-3 mb-3" id="panel-screen">
+                <div class="col-lg-4" id="panel-video">
+                    <div class="card">
+                        <div class="card-body">
+                            <h2 class="h6 mb-3">Video</h2>
+                            <div class="field">
+                                <label class="form-label" for="video-url">YouTube or video file URL</label>
+                                <input id="video-url" class="form-control form-control-sm" type="text" placeholder="https://youtube.com/watch?v=...">
+                            </div>
+                            <button type="button" class="btn btn-sm btn-primary" id="show-video">Show video</button>
+                        </div>
+                    </div>
                 </div>
-                <button type="button" id="show-video">Show video</button>
-            </section>
-            {{end}}
-
-            {{if eq .Section "image"}}
-            <section class="panel">
-                <h2>Image</h2>
-                <div class="field">
-                    <label for="image-url">Image URL</label>
-                    <input id="image-url" type="text" placeholder="https://example.com/image.png">
+                <div class="col-lg-4" id="panel-image">
+                    <div class="card">
+                        <div class="card-body">
+                            <h2 class="h6 mb-3">Image</h2>
+                            <div class="field">
+                                <label class="form-label" for="image-url">Image URL</label>
+                                <input id="image-url" class="form-control form-control-sm" type="text" placeholder="https://example.com/image.png">
+                            </div>
+                            <button type="button" class="btn btn-sm btn-primary" id="show-image">Show image</button>
+                        </div>
+                    </div>
                 </div>
-                <button type="button" id="show-image">Show image</button>
-            </section>
-            {{end}}
-
-            {{if eq .Section "text"}}
-            <section class="panel">
-                <h2>Text</h2>
-                <div class="field">
-                    <label for="text-title">Title</label>
-                    <input id="text-title" type="text" value="CodeCamp Sponsors 2025">
+                <div class="col-lg-4" id="panel-text">
+                    <div class="card">
+                        <div class="card-body">
+                            <h2 class="h6 mb-3">Text</h2>
+                            <div class="field">
+                                <label class="form-label" for="text-title">Title</label>
+                                <input id="text-title" class="form-control form-control-sm" type="text" value="CodeCamp Sponsors 2025">
+                            </div>
+                            <div class="field">
+                                <label class="form-label" for="text-content">Content</label>
+                                <textarea id="text-content" class="form-control form-control-sm" rows="3">Our sponsors make this possible. Please support them!</textarea>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-primary" id="show-text">Show text</button>
+                        </div>
+                    </div>
                 </div>
-                <div class="field">
-                    <label for="text-content">Content</label>
-                    <textarea id="text-content">Our sponsors make this possible. Please support them!</textarea>
+            </div>
+            <div class="row g-3">
+                <div class="col-lg-6" id="panel-audio">
+                    <div class="card">
+                        <div class="card-body">
+                            <h2 class="h6 mb-3">Room audio</h2>
+                            <div class="field">
+                                <label class="form-label" for="youtube-audio-url">YouTube URL</label>
+                                <input id="youtube-audio-url" class="form-control form-control-sm" type="url" placeholder="https://www.youtube.com/watch?v=...">
+                            </div>
+                            <div class="d-flex flex-wrap gap-2 mb-2">
+                                <button type="button" class="btn btn-sm btn-success" id="play-audio">Play</button>
+                                <button type="button" class="btn btn-sm btn-danger" id="stop-audio">Stop</button>
+                            </div>
+                            <div class="d-flex flex-wrap gap-2">
+                                <button type="button" class="btn btn-sm btn-outline-light" data-audio="https://www.youtube.com/watch?v=jfKfPfyJRdk">Lofi Hip Hop</button>
+                                <button type="button" class="btn btn-sm btn-outline-light" data-audio="https://www.youtube.com/watch?v=5qap5aO4i9A">Lofi Beats</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <button type="button" id="show-text">Show text</button>
-            </section>
+                <div class="col-lg-6" id="panel-notifications">
+                    <div class="card">
+                        <div class="card-body">
+                            <h2 class="h6 mb-3">Notifications</h2>
+                            <div class="d-flex flex-wrap gap-2 mb-2" id="notif-types">
+                                <button type="button" class="btn btn-sm btn-outline-light active" data-notif-type="info">Info</button>
+                                <button type="button" class="btn btn-sm btn-outline-light" data-notif-type="success">Success</button>
+                                <button type="button" class="btn btn-sm btn-outline-light" data-notif-type="warning">Warning</button>
+                                <button type="button" class="btn btn-sm btn-outline-light" data-notif-type="error">Error</button>
+                            </div>
+                            <div class="d-flex flex-wrap gap-2 mb-2" id="precanned"></div>
+                            <div class="field">
+                                <label class="form-label" for="notif-title">Custom title</label>
+                                <input id="notif-title" class="form-control form-control-sm" type="text">
+                            </div>
+                            <div class="field">
+                                <label class="form-label" for="notif-message">Custom message</label>
+                                <textarea id="notif-message" class="form-control form-control-sm" rows="2"></textarea>
+                            </div>
+                            <div class="d-flex flex-wrap gap-2">
+                                <button type="button" class="btn btn-sm btn-primary" id="send-notif">Send notification</button>
+                                <button type="button" class="btn btn-sm btn-danger" id="dismiss-notifs">Dismiss all</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             {{end}}
 
             {{if eq .Section "settings"}}
-            <section class="panel">
-                <h2>Room settings</h2>
-                <p>Saved on this machine. The public display updates when you save.</p>
-                <form method="post" action="/admin/settings">
-                    <input type="hidden" name="csrf" value="{{.CSRF}}">
-                    <div class="field">
-                        <label for="event-title-input">Event title</label>
-                        <input id="event-title-input" name="eventTitle" type="text" maxlength="80" value="{{.EventTitle}}">
-                    </div>
-                    <div class="dates">
+            <section class="card" id="panel-settings">
+                <div class="card-body">
+                    <h2 class="h6 mb-2">Room settings</h2>
+                    <p class="text-sm">Saved on this machine. The public display updates when you save.</p>
+                    <form method="post" action="/admin/settings">
+                        <input type="hidden" name="csrf" value="{{.CSRF}}">
                         <div class="field">
-                            <label for="wifi-ssid">Wi-Fi network</label>
-                            <input id="wifi-ssid" name="wifiSsid" type="text" maxlength="64" autocomplete="off" value="{{.WifiSSID}}">
+                            <label class="form-label" for="event-title-input">Event title</label>
+                            <input id="event-title-input" class="form-control form-control-sm" name="eventTitle" type="text" maxlength="80" value="{{.EventTitle}}">
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="field">
+                                    <label class="form-label" for="wifi-ssid">Wi-Fi network</label>
+                                    <input id="wifi-ssid" class="form-control form-control-sm" name="wifiSsid" type="text" maxlength="64" autocomplete="off" value="{{.WifiSSID}}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="field">
+                                    <label class="form-label" for="wifi-password">Wi-Fi password</label>
+                                    <input id="wifi-password" class="form-control form-control-sm" name="wifiPassword" type="text" maxlength="64" autocomplete="off" value="{{.WifiPassword}}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="field">
+                                    <label class="form-label" for="event-start">Camp starts</label>
+                                    <input id="event-start" class="form-control form-control-sm" name="eventStart" type="datetime-local" required value="{{.EventStart}}">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="field">
+                                    <label class="form-label" for="day-camp-end">Day camp ends</label>
+                                    <input id="day-camp-end" class="form-control form-control-sm" name="dayCampEnd" type="datetime-local" required value="{{.DayCampEnd}}">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="field">
+                                    <label class="form-label" for="camp24-end">24-hour camp ends</label>
+                                    <input id="camp24-end" class="form-control form-control-sm" name="camp24End" type="datetime-local" required value="{{.Camp24End}}">
+                                </div>
+                            </div>
                         </div>
                         <div class="field">
-                            <label for="wifi-password">Wi-Fi password</label>
-                            <input id="wifi-password" name="wifiPassword" type="text" maxlength="64" autocomplete="off" value="{{.WifiPassword}}">
+                            <label class="form-label" for="ticker-announcements">Ticker, one announcement per line</label>
+                            <textarea id="ticker-announcements" class="form-control form-control-sm" name="ticker" rows="4">{{.Ticker}}</textarea>
                         </div>
-                    </div>
-                    <div class="dates">
-                        <div class="field">
-                            <label for="event-start">Camp starts</label>
-                            <input id="event-start" name="eventStart" type="datetime-local" required value="{{.EventStart}}">
+                        <div class="d-flex flex-wrap gap-2 mb-2">
+                            <button type="submit" class="btn btn-sm btn-success">Save room settings</button>
+                            <button type="button" class="btn btn-sm btn-outline-light" id="update-ticker">Update ticker</button>
+                            <button type="button" class="btn btn-sm btn-outline-light" id="clear-ticker">Clear</button>
                         </div>
-                        <div class="field">
-                            <label for="day-camp-end">Day camp ends</label>
-                            <input id="day-camp-end" name="dayCampEnd" type="datetime-local" required value="{{.DayCampEnd}}">
+                        <div class="d-flex flex-wrap gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-light" data-ticker="Break time in 5 minutes">Break</button>
+                            <button type="button" class="btn btn-sm btn-outline-light" data-ticker="Lunch is being served">Lunch</button>
+                            <button type="button" class="btn btn-sm btn-outline-light" data-ticker="Game starting soon!">Game soon</button>
                         </div>
-                        <div class="field">
-                            <label for="camp24-end">24-hour camp ends</label>
-                            <input id="camp24-end" name="camp24End" type="datetime-local" required value="{{.Camp24End}}">
-                        </div>
-                    </div>
-                    <div class="field">
-                        <label for="ticker-announcements">Ticker, one announcement per line</label>
-                        <textarea id="ticker-announcements" name="ticker">{{.Ticker}}</textarea>
-                    </div>
-                    <div class="row">
-                        <button type="submit" class="ok">Save room settings</button>
-                        <button type="button" id="update-ticker">Update ticker</button>
-                        <button type="button" id="clear-ticker">Clear</button>
-                    </div>
-                    <div class="row">
-                        <button type="button" data-ticker="Break time in 5 minutes">Break</button>
-                        <button type="button" data-ticker="Lunch is being served">Lunch</button>
-                        <button type="button" data-ticker="Game starting soon!">Game soon</button>
-                    </div>
-                </form>
+                    </form>
+                </div>
             </section>
             {{end}}
 
             {{if eq .Section "logos"}}
-            <section class="panel" id="sponsor-logos">
-                <h2>Sponsor logos</h2>
-                <p>Stored on this machine. The display loads logos whose event matches the current event title.</p>
-                <form id="logo-form" method="post" action="/admin/logos" enctype="multipart/form-data">
-                    <input type="hidden" name="csrf" value="{{.CSRF}}">
-                    <div class="field">
-                        <label for="logo-file">Image</label>
-                        <input id="logo-file" name="source" type="file" accept="image/png,image/jpeg,image/gif,image/webp">
-                    </div>
-                    <div class="crop-stage" id="crop-stage" hidden>
-                        <canvas id="crop-canvas" width="320" height="320"></canvas>
-                    </div>
-                    <div class="field">
-                        <label for="logo-zoom">Zoom</label>
-                        <input id="logo-zoom" type="range" min="1" max="4" step="0.01" value="1">
-                    </div>
-                    <label class="logo-check" for="logo-bg">
-                        <input id="logo-bg" type="checkbox">
-                        Fill background
-                    </label>
-                    <div class="field">
-                        <label for="logo-color">Background color</label>
-                        <input id="logo-color" type="color" value="#ffffff">
-                    </div>
-                    <div class="grid">
-                        <div class="field">
-                            <label for="logo-event">Event</label>
-                            <input id="logo-event" name="event" type="text" maxlength="80" required value="{{.LogoEvent}}" list="logo-events">
-                            <datalist id="logo-events">
-                                {{range .Events}}<option value="{{.}}"></option>{{end}}
-                            </datalist>
+            <div class="row g-3">
+                <div class="col-lg-6">
+                    <section class="card h-100" id="sponsor-logos">
+                        <div class="card-body">
+                            <h2 class="h6 mb-2">Sponsor logos</h2>
+                            <p class="text-sm">Stored on this machine. The display loads logos whose event matches the current event title.</p>
+                            <form id="logo-form" method="post" action="/admin/logos" enctype="multipart/form-data">
+                                <input type="hidden" name="csrf" value="{{.CSRF}}">
+                                <div class="field">
+                                    <label class="form-label" for="logo-file">Image</label>
+                                    <input id="logo-file" class="form-control form-control-sm" name="source" type="file" accept="image/png,image/jpeg,image/gif,image/webp">
+                                </div>
+                                <div class="crop-stage" id="crop-stage" hidden>
+                                    <canvas id="crop-canvas" width="320" height="320"></canvas>
+                                </div>
+                                <div class="field">
+                                    <label class="form-label" for="logo-zoom">Zoom</label>
+                                    <input id="logo-zoom" class="form-range" type="range" min="1" max="4" step="0.01" value="1">
+                                </div>
+                                <div class="form-check logo-check">
+                                    <input id="logo-bg" class="form-check-input" type="checkbox">
+                                    <label class="form-check-label" for="logo-bg">Fill background</label>
+                                </div>
+                                <div class="field">
+                                    <label class="form-label" for="logo-color">Background color</label>
+                                    <input id="logo-color" class="form-control form-control-color" type="color" value="#ffffff">
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-sm-7">
+                                        <div class="field">
+                                            <label class="form-label" for="logo-event">Event</label>
+                                            <input id="logo-event" class="form-control form-control-sm" name="event" type="text" maxlength="80" required value="{{.LogoEvent}}" list="logo-events">
+                                            <datalist id="logo-events">
+                                                {{range .Events}}<option value="{{.}}"></option>{{end}}
+                                            </datalist>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-5">
+                                        <div class="field">
+                                            <label class="form-label" for="logo-seconds">Display time, in seconds</label>
+                                            <input id="logo-seconds" class="form-control form-control-sm" name="seconds" type="number" min="1" max="600" step="1" required value="15">
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-sm btn-success" id="logo-save" disabled>Save logo</button>
+                            </form>
                         </div>
-                        <div class="field">
-                            <label for="logo-seconds">Display time, in seconds</label>
-                            <input id="logo-seconds" name="seconds" type="number" min="1" max="600" step="1" required value="15">
+                    </section>
+                </div>
+                <div class="col-lg-6">
+                    <section class="card h-100">
+                        <div class="card-body">
+                            <form id="logo-bulk-form" method="post" action="/admin/logos/bulk" enctype="multipart/form-data">
+                                <input type="hidden" name="csrf" value="{{.CSRF}}">
+                                <h2 class="h6 mb-2">Upload several</h2>
+                                <p class="text-sm">These images are saved whole, without the crop tool. One upload can include up to 30 images and 64MB. PNG, JPEG, or GIF.</p>
+                                <div class="field">
+                                    <label class="form-label" for="logo-bulk-file">Images</label>
+                                    <input id="logo-bulk-file" class="form-control form-control-sm" name="logos" type="file" accept="image/png,image/jpeg,image/gif" multiple required>
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-sm-7">
+                                        <div class="field">
+                                            <label class="form-label" for="logo-bulk-event">Event</label>
+                                            <input id="logo-bulk-event" class="form-control form-control-sm" name="event" type="text" maxlength="80" required value="{{.LogoEvent}}" list="logo-events">
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-5">
+                                        <div class="field">
+                                            <label class="form-label" for="logo-bulk-seconds">Display time, in seconds</label>
+                                            <input id="logo-bulk-seconds" class="form-control form-control-sm" name="seconds" type="number" min="1" max="600" step="1" required value="15">
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-sm btn-success">Upload logos</button>
+                            </form>
                         </div>
-                    </div>
-                    <button type="submit" class="ok" id="logo-save" disabled>Save logo</button>
-                </form>
-                <form id="logo-bulk-form" method="post" action="/admin/logos/bulk" enctype="multipart/form-data">
-                    <input type="hidden" name="csrf" value="{{.CSRF}}">
-                    <h2>Upload several</h2>
-                    <p>These images are saved whole, without the crop tool. One upload can include up to 30 images and 64MB. PNG, JPEG, or GIF.</p>
-                    <div class="field">
-                        <label for="logo-bulk-file">Images</label>
-                        <input id="logo-bulk-file" name="logos" type="file" accept="image/png,image/jpeg,image/gif" multiple required>
-                    </div>
-                    <div class="grid">
-                        <div class="field">
-                            <label for="logo-bulk-event">Event</label>
-                            <input id="logo-bulk-event" name="event" type="text" maxlength="80" required value="{{.LogoEvent}}" list="logo-events">
-                        </div>
-                        <div class="field">
-                            <label for="logo-bulk-seconds">Display time, in seconds</label>
-                            <input id="logo-bulk-seconds" name="seconds" type="number" min="1" max="600" step="1" required value="15">
-                        </div>
-                    </div>
-                    <button type="submit" class="ok">Upload logos</button>
-                </form>
-                <table>
-                    <thead>
-                        <tr><th></th><th>Event</th><th>Seconds</th><th></th></tr>
-                    </thead>
-                    <tbody>
-                        {{range .Logos}}
-                        <tr>
-                            <td><img class="logo-thumb" src="{{.URL}}" alt=""></td>
-                            <td>{{.Event}}</td>
-                            <td>{{.Seconds}}</td>
-                            <td>
-                                <form method="post" action="/admin/logos/{{.ID}}/delete" data-confirm="Remove this logo?">
-                                    <input type="hidden" name="csrf" value="{{$.CSRF}}">
-                                    <button class="danger" type="submit">Remove</button>
-                                </form>
-                            </td>
-                        </tr>
-                        {{else}}
-                        <tr><td colspan="4">No logos yet.</td></tr>
-                        {{end}}
-                    </tbody>
-                </table>
-            </section>
-            {{end}}
-
-            {{if eq .Section "audio"}}
-            <section class="panel">
-                <h2>Room audio</h2>
-                <div class="field">
-                    <label for="youtube-audio-url">YouTube URL</label>
-                    <input id="youtube-audio-url" type="url" placeholder="https://www.youtube.com/watch?v=...">
+                    </section>
                 </div>
-                <div class="row">
-                    <button type="button" class="ok" id="play-audio">Play</button>
-                    <button type="button" class="danger" id="stop-audio">Stop</button>
+            </div>
+            <section class="card mt-3">
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead>
+                            <tr><th></th><th>Event</th><th>Seconds</th><th></th></tr>
+                        </thead>
+                        <tbody>
+                            {{range .Logos}}
+                            <tr>
+                                <td><img class="logo-thumb" src="{{.URL}}" alt=""></td>
+                                <td>{{.Event}}</td>
+                                <td>{{.Seconds}}</td>
+                                <td>
+                                    <form method="post" action="/admin/logos/{{.ID}}/delete" data-confirm="Remove this logo?">
+                                        <input type="hidden" name="csrf" value="{{$.CSRF}}">
+                                        <button class="btn btn-sm btn-danger" type="submit">Remove</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {{else}}
+                            <tr><td colspan="4">No logos yet.</td></tr>
+                            {{end}}
+                        </tbody>
+                    </table>
                 </div>
-                <div class="row">
-                    <button type="button" data-audio="https://www.youtube.com/watch?v=jfKfPfyJRdk">Lofi Hip Hop</button>
-                    <button type="button" data-audio="https://www.youtube.com/watch?v=5qap5aO4i9A">Lofi Beats</button>
-                </div>
-            </section>
-            {{end}}
-
-            {{if eq .Section "notifications"}}
-            <section class="panel">
-                <h2>Notifications</h2>
-                <div class="row" id="notif-types">
-                    <button type="button" class="active" data-notif-type="info">Info</button>
-                    <button type="button" data-notif-type="success">Success</button>
-                    <button type="button" data-notif-type="warning">Warning</button>
-                    <button type="button" data-notif-type="error">Error</button>
-                </div>
-                <div class="row" id="precanned"></div>
-                <div class="field">
-                    <label for="notif-title">Custom title</label>
-                    <input id="notif-title" type="text">
-                </div>
-                <div class="field">
-                    <label for="notif-message">Custom message</label>
-                    <textarea id="notif-message"></textarea>
-                </div>
-                <div class="row">
-                    <button type="button" id="send-notif">Send notification</button>
-                    <button type="button" class="danger" id="dismiss-notifs">Dismiss all</button>
-                </div>
-            </section>
-            {{end}}
-
-            {{if eq .Section "players"}}
-            <section class="panel">
-                <h2>Players on the quiz</h2>
-                <p>Joined: <strong id="player-count">0</strong>. The quiz socket is public. No player account is required.</p>
-                <div class="player-list" id="player-list"><div class="player">No players connected</div></div>
             </section>
             {{end}}
 
             {{if eq .Section "users"}}
-            <section class="panel">
-                <h2>Dashboard access</h2>
-                {{if .IsAdmin}}
-                <p>Add a staff member or another admin. They sign in with email and password. Only admins can manage this list.</p>
-                <form method="post" action="/admin/users">
-                    <input type="hidden" name="csrf" value="{{.CSRF}}">
-                    <div class="grid">
-                        <div class="field">
-                            <label for="new-email">Email</label>
-                            <input id="new-email" name="email" type="email" autocomplete="off" required>
+            <section class="card">
+                <div class="card-body">
+                    <h2 class="h6 mb-2">Dashboard access</h2>
+                    {{if .IsAdmin}}
+                    <p class="text-sm">Add a staff member or another admin. They sign in with email and password. Only admins can manage this list.</p>
+                    <form method="post" action="/admin/users">
+                        <input type="hidden" name="csrf" value="{{.CSRF}}">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="field">
+                                    <label class="form-label" for="new-email">Email</label>
+                                    <input id="new-email" class="form-control form-control-sm" name="email" type="email" autocomplete="off" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="field">
+                                    <label class="form-label" for="new-password">Temporary password</label>
+                                    <input id="new-password" class="form-control form-control-sm" name="password" type="text" autocomplete="new-password" minlength="10" required>
+                                </div>
+                            </div>
                         </div>
                         <div class="field">
-                            <label for="new-password">Temporary password</label>
-                            <input id="new-password" name="password" type="text" autocomplete="new-password" minlength="10" required>
+                            <label class="form-label" for="new-role">Role</label>
+                            <select id="new-role" class="form-select form-select-sm" name="role">
+                                <option value="staff">Staff — can run the show</option>
+                                <option value="admin">Admin — can also add and remove users</option>
+                            </select>
                         </div>
-                    </div>
-                    <div class="field">
-                        <label for="new-role">Role</label>
-                        <select id="new-role" name="role">
-                            <option value="staff">Staff — can run the show</option>
-                            <option value="admin">Admin — can also add and remove users</option>
-                        </select>
-                    </div>
-                    <button type="submit">Add user</button>
-                </form>
-                {{else}}
-                <p>You can run the display and the quiz. An admin has to add or remove dashboard users.</p>
-                {{end}}
-                <table>
-                    <thead>
-                        <tr><th>Email</th><th>Role</th><th>Added</th><th></th></tr>
-                    </thead>
-                    <tbody>
-                        {{range .Users}}
-                        <tr>
-                            <td>{{.Email}}</td>
-                            <td><span class="badge">{{.Role}}</span></td>
-                            <td>{{.Created}}</td>
-                            <td>
-                                {{if .CanRemove}}
-                                <form method="post" action="/admin/users/{{.ID}}/delete" data-confirm="Remove this user from the dashboard?">
-                                    <input type="hidden" name="csrf" value="{{$.CSRF}}">
-                                    <button class="danger" type="submit">Remove</button>
-                                </form>
-                                {{end}}
-                            </td>
-                        </tr>
-                        {{end}}
-                    </tbody>
-                </table>
+                        <button class="btn btn-sm btn-primary" type="submit">Add user</button>
+                    </form>
+                    {{else}}
+                    <p class="text-sm">You can run the display and the quiz. An admin has to add or remove dashboard users.</p>
+                    {{end}}
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead>
+                            <tr><th>Email</th><th>Role</th><th>Added</th><th></th></tr>
+                        </thead>
+                        <tbody>
+                            {{range .Users}}
+                            <tr>
+                                <td>{{.Email}}</td>
+                                <td><span class="badge">{{.Role}}</span></td>
+                                <td>{{.Created}}</td>
+                                <td>
+                                    {{if .CanRemove}}
+                                    <form method="post" action="/admin/users/{{.ID}}/delete" data-confirm="Remove this user from the dashboard?">
+                                        <input type="hidden" name="csrf" value="{{$.CSRF}}">
+                                        <button class="btn btn-sm btn-danger" type="submit">Remove</button>
+                                    </form>
+                                    {{end}}
+                                </td>
+                            </tr>
+                            {{end}}
+                        </tbody>
+                    </table>
+                </div>
             </section>
             {{end}}
+
+            <footer class="footer pt-4">
+                <p class="text-sm mb-0">Dashboard template by Creative Tim, MIT.</p>
+            </footer>
         </div>
-    </div>
+    </main>
+    <script src="/vendor/argon/js/bootstrap.bundle.min.js"></script>
     <script src="/js/ws.js"></script>
     <script src="/js/admin.js"></script>
     {{if eq .Section "logos"}}<script src="/js/logo-admin.js"></script>{{end}}

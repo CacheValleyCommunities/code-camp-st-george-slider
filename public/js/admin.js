@@ -13,14 +13,29 @@ const canned = {
     joke: { type: "info", title: "Tech Humor", message: "Why do programmers prefer dark mode? Because light attracts bugs." }
 };
 
+function paintLink(connected) {
+    const text = connected ? "Live link to the display" : "Display link disconnected";
+    if (statusEl) {
+        statusEl.classList.toggle("connected", connected);
+    }
+    if (statusTextEl) {
+        statusTextEl.textContent = text;
+    }
+    document.querySelectorAll("[data-status-mirror]").forEach((mirror) => {
+        mirror.classList.toggle("connected", connected);
+        const label = mirror.querySelector("[data-status-text]");
+        if (label) {
+            label.textContent = text;
+        }
+    });
+}
+
 socket.on("connect", () => {
-    statusEl.classList.add("connected");
-    statusTextEl.textContent = "Live link to the display";
+    paintLink(true);
 });
 
 socket.on("disconnect", () => {
-    statusEl.classList.remove("connected");
-    statusTextEl.textContent = "Display link disconnected";
+    paintLink(false);
 });
 
 function ready() {
@@ -110,6 +125,7 @@ if (cannedBox) {
     Object.keys(canned).forEach((key) => {
         const button = document.createElement("button");
         button.type = "button";
+        button.className = "btn btn-sm btn-outline-light";
         button.textContent = canned[key].title;
         button.addEventListener("click", () => {
             const item = canned[key];
@@ -194,7 +210,12 @@ socket.on("game-players-update", (data) => {
     if (!count || !list) {
         return;
     }
-    count.textContent = String(data.totalPlayers || 0);
+    const total = String(data.totalPlayers || 0);
+    count.textContent = total;
+    const inline = document.getElementById("player-count-inline");
+    if (inline) {
+        inline.textContent = total;
+    }
     list.replaceChildren();
     const players = data.players || [];
     if (players.length === 0) {
@@ -219,3 +240,44 @@ document.querySelectorAll("form[data-confirm]").forEach((form) => {
         }
     });
 });
+
+(function () {
+    const toggler = document.getElementById("iconNavbarSidenav");
+    const closer = document.getElementById("iconSidenav");
+    const backdrop = document.getElementById("sidenav-backdrop");
+    if (!toggler) {
+        return;
+    }
+    function setOpen(open) {
+        document.body.classList.toggle("g-sidenav-pinned", open);
+        toggler.setAttribute("aria-expanded", open ? "true" : "false");
+    }
+    toggler.addEventListener("click", () => {
+        setOpen(!document.body.classList.contains("g-sidenav-pinned"));
+    });
+    if (closer) {
+        closer.addEventListener("click", () => setOpen(false));
+    }
+    if (backdrop) {
+        backdrop.addEventListener("click", () => setOpen(false));
+    }
+    window.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+            setOpen(false);
+        }
+    });
+    window.addEventListener("resize", () => {
+        if (window.innerWidth >= 1200) {
+            setOpen(false);
+        }
+    });
+})();
+
+const section = document.body.dataset.section || "";
+if (section && section !== "display") {
+    const panel = document.getElementById("panel-" + section);
+    if (panel) {
+        panel.classList.add("is-focus");
+        panel.scrollIntoView({ block: "start" });
+    }
+}
