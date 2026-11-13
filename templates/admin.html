@@ -9,24 +9,25 @@
     <link rel="stylesheet" href="/vendor/argon/css/argon-dashboard.min.css">
     <link rel="stylesheet" href="/css/admin.css">
 </head>
-<body class="g-sidenav-show bg-gray-100 dark-version" data-section="{{.Section}}">
+<body class="g-sidenav-show bg-gray-100" data-section="{{.Section}}">
+    <div class="min-height-300 bg-dark position-absolute w-100"></div>
     <div class="sidenav-backdrop" id="sidenav-backdrop"></div>
-    <aside class="sidenav navbar navbar-vertical navbar-expand-xs border-0 border-radius-xl my-3 fixed-start ms-4" id="sidenav-main">
+    <aside class="sidenav bg-white navbar navbar-vertical navbar-expand-xs border-0 border-radius-xl my-3 fixed-start ms-4" id="sidenav-main">
         <div class="sidenav-header">
-            <button type="button" class="btn btn-link text-white d-xl-none position-absolute end-0 top-0" id="iconSidenav" aria-label="Close menu">
+            <button type="button" class="btn btn-link text-secondary d-xl-none position-absolute end-0 top-0 mb-0" id="iconSidenav" aria-label="Close menu">
                 <i class="ni ni-fat-remove" aria-hidden="true"></i>
             </button>
             <a class="navbar-brand m-0" href="/admin">
-                <span class="fw-bold">CodeCamp</span>
+                <span class="ms-1 font-weight-bold">CodeCamp</span>
             </a>
         </div>
-        <hr class="horizontal light mt-0">
+        <hr class="horizontal dark mt-0">
         <div class="collapse navbar-collapse w-auto" id="sidenav-collapse-main">
             <ul class="navbar-nav">
                 <li class="nav-item">
                     <a class="nav-link{{if .ShowPage}} active{{end}}" href="/admin"{{if .ShowPage}} aria-current="page"{{end}}>
                         <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
-                            <i class="ni ni-tv-2 text-white text-sm opacity-10" aria-hidden="true"></i>
+                            <i class="ni ni-tv-2 text-dark text-sm opacity-10" aria-hidden="true"></i>
                         </div>
                         <span class="nav-link-text ms-1">Show</span>
                     </a>
@@ -34,7 +35,7 @@
                 <li class="nav-item">
                     <a class="nav-link{{if eq .Section "settings"}} active{{end}}" href="/admin/settings"{{if eq .Section "settings"}} aria-current="page"{{end}}>
                         <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
-                            <i class="ni ni-world-2 text-white text-sm opacity-10" aria-hidden="true"></i>
+                            <i class="ni ni-world-2 text-dark text-sm opacity-10" aria-hidden="true"></i>
                         </div>
                         <span class="nav-link-text ms-1">Room</span>
                     </a>
@@ -42,7 +43,7 @@
                 <li class="nav-item">
                     <a class="nav-link{{if eq .Section "logos"}} active{{end}}" href="/admin/logos"{{if eq .Section "logos"}} aria-current="page"{{end}}>
                         <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
-                            <i class="ni ni-image text-white text-sm opacity-10" aria-hidden="true"></i>
+                            <i class="ni ni-image text-dark text-sm opacity-10" aria-hidden="true"></i>
                         </div>
                         <span class="nav-link-text ms-1">Logos</span>
                     </a>
@@ -50,7 +51,7 @@
                 <li class="nav-item">
                     <a class="nav-link{{if eq .Section "users"}} active{{end}}" href="/admin/users"{{if eq .Section "users"}} aria-current="page"{{end}}>
                         <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
-                            <i class="ni ni-single-02 text-white text-sm opacity-10" aria-hidden="true"></i>
+                            <i class="ni ni-single-02 text-dark text-sm opacity-10" aria-hidden="true"></i>
                         </div>
                         <span class="nav-link-text ms-1">Access</span>
                     </a>
@@ -59,170 +60,262 @@
         </div>
     </aside>
     <main class="main-content position-relative border-radius-lg">
-        <nav class="navbar navbar-main navbar-expand-lg px-0 mx-3 shadow-none border-radius-xl" id="navbarBlur" data-scroll="false">
-            <div class="container-fluid py-1 px-2 control-bar">
-                <div class="min-w-0">
-                    <h1 class="h5 text-white mb-0">{{.Heading}}</h1>
-                    <div class="text-sm text-white event-title">{{.EventTitle}}</div>
-                </div>
-                <div class="d-flex flex-wrap align-items-center gap-3 ms-auto">
-                    <div class="status text-white" id="status">
-                        <span class="dot"></span>
-                        <span id="status-text">Display link disconnected</span>
-                    </div>
-                    <div class="text-white text-sm text-end who">
-                        <strong class="d-block">{{.Email}}</strong>
-                        <span>{{.Role}}</span>
-                    </div>
-                    <form method="post" action="/logout" class="m-0">
-                        <input type="hidden" name="csrf" value="{{.CSRF}}">
-                        <button type="submit" class="btn btn-sm btn-outline-light">Sign out</button>
-                    </form>
-                    <button type="button" class="btn btn-link text-white d-xl-none p-0" id="iconNavbarSidenav" aria-label="Open menu" aria-controls="sidenav-main" aria-expanded="false">
-                        <div class="sidenav-toggler-inner">
-                            <i class="sidenav-toggler-line bg-white"></i>
-                            <i class="sidenav-toggler-line bg-white"></i>
-                            <i class="sidenav-toggler-line bg-white"></i>
+        <nav class="navbar navbar-main navbar-expand-lg px-0 mx-4 shadow-none border-radius-xl" id="navbarBlur" data-scroll="false">
+            <div class="container-fluid py-1 px-3">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0">
+                        <li class="breadcrumb-item text-sm"><a class="opacity-5 text-white" href="/admin">CodeCamp</a></li>
+                        <li class="breadcrumb-item text-sm text-white active" aria-current="page">{{.Heading}}</li>
+                    </ol>
+                    <h6 class="font-weight-bolder text-white mb-0">{{.Heading}}</h6>
+                    <div class="text-xs text-white opacity-8">{{.EventTitle}}</div>
+                </nav>
+                <ul class="navbar-nav ms-auto flex-row flex-wrap align-items-center gap-3">
+                    <li class="nav-item d-flex align-items-center">
+                        <div class="status text-white" id="status">
+                            <span class="dot"></span>
+                            <span id="status-text">Display link disconnected</span>
                         </div>
-                    </button>
-                </div>
+                    </li>
+                    <li class="nav-item d-flex align-items-center">
+                        <div class="text-white text-sm text-end who">
+                            <strong class="d-block font-weight-bold">{{.Email}}</strong>
+                            <span class="opacity-8">{{.Role}}</span>
+                        </div>
+                    </li>
+                    <li class="nav-item d-flex align-items-center">
+                        <form method="post" action="/logout" class="m-0">
+                            <input type="hidden" name="csrf" value="{{.CSRF}}">
+                            <button type="submit" class="btn btn-sm btn-white mb-0">Sign out</button>
+                        </form>
+                    </li>
+                    <li class="nav-item d-xl-none d-flex align-items-center">
+                        <button type="button" class="nav-link text-white p-0 mb-0 border-0 bg-transparent" id="iconNavbarSidenav" aria-label="Open menu" aria-controls="sidenav-main" aria-expanded="false">
+                            <div class="sidenav-toggler-inner">
+                                <i class="sidenav-toggler-line bg-white"></i>
+                                <i class="sidenav-toggler-line bg-white"></i>
+                                <i class="sidenav-toggler-line bg-white"></i>
+                            </div>
+                        </button>
+                    </li>
+                </ul>
             </div>
         </nav>
-        <div class="container-fluid py-3 px-3">
-            {{if .Notice}}<div class="alert alert-success banner good" role="status">{{.Notice}}</div>{{end}}
-            {{if .Error}}<div class="alert alert-danger banner bad" role="alert">{{.Error}}</div>{{end}}
+        <div class="container-fluid py-4">
+            {{if .Notice}}<div class="alert alert-success text-white" role="status">{{.Notice}}</div>{{end}}
+            {{if .Error}}<div class="alert alert-danger text-white" role="alert">{{.Error}}</div>{{end}}
 
             {{if .ShowPage}}
-            <nav class="show-jump" aria-label="Show sections">
-                <a class="btn btn-sm {{if eq .Section "display"}}btn-primary{{else}}btn-outline-light{{end}}" href="#panel-display">Window</a>
-                <a class="btn btn-sm {{if or (eq .Section "game") (eq .Section "players")}}btn-primary{{else}}btn-outline-light{{end}}" href="#panel-game">Quiz</a>
-                <a class="btn btn-sm {{if or (eq .Section "video") (eq .Section "image") (eq .Section "text")}}btn-primary{{else}}btn-outline-light{{end}}" href="#panel-screen">Screen</a>
-                <a class="btn btn-sm {{if eq .Section "audio"}}btn-primary{{else}}btn-outline-light{{end}}" href="#panel-audio">Audio</a>
-                <a class="btn btn-sm {{if eq .Section "notifications"}}btn-primary{{else}}btn-outline-light{{end}}" href="#panel-notifications">Alerts</a>
-            </nav>
-            <div class="card mb-3" id="panel-display">
-                <div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-2">
-                    <h2 class="h6 mb-0">Display window</h2>
-                    <div class="d-flex flex-wrap gap-2">
-                        <button type="button" class="btn btn-sm btn-outline-light" id="show-window">Show</button>
-                        <button type="button" class="btn btn-sm btn-outline-light" id="hide-window">Hide</button>
-                        <button type="button" class="btn btn-sm btn-outline-light" id="toggle-window">Toggle</button>
-                    </div>
-                </div>
-            </div>
-            <div class="row g-3 mb-3">
-                <div class="col-lg-7" id="panel-game">
+            <ul class="nav nav-pills mb-4" aria-label="Show sections">
+                <li class="nav-item"><a class="nav-link{{if eq .Section "display"}} active{{end}}" href="#panel-display">Window</a></li>
+                <li class="nav-item"><a class="nav-link{{if or (eq .Section "game") (eq .Section "players")}} active{{end}}" href="#panel-game">Quiz</a></li>
+                <li class="nav-item"><a class="nav-link{{if or (eq .Section "video") (eq .Section "image") (eq .Section "text")}} active{{end}}" href="#panel-screen">Screen</a></li>
+                <li class="nav-item"><a class="nav-link{{if eq .Section "audio"}} active{{end}}" href="#panel-audio">Audio</a></li>
+                <li class="nav-item"><a class="nav-link{{if eq .Section "notifications"}} active{{end}}" href="#panel-notifications">Alerts</a></li>
+            </ul>
+            <div class="row">
+                <div class="col-xl-4 col-sm-6 mb-4">
                     <div class="card">
-                        <div class="card-body">
-                            <h2 class="h6 mb-3">Quiz</h2>
-                            <div class="field">
-                                <select id="game-select" class="form-select form-select-sm" aria-label="Quiz"><option value="">Loading quizzes...</option></select>
-                            </div>
-                            <div class="d-flex flex-wrap gap-2">
-                                <button type="button" class="btn btn-sm btn-success" id="start-game">Start</button>
-                                <button type="button" class="btn btn-sm btn-danger" id="stop-game">Stop</button>
-                                <button type="button" class="btn btn-sm btn-outline-light" id="toggle-game">Game window</button>
+                        <div class="card-body p-3">
+                            <div class="row">
+                                <div class="col-8">
+                                    <div class="numbers">
+                                        <p class="text-sm mb-0 text-uppercase font-weight-bold">Display link</p>
+                                        <div class="status mt-2" data-status-mirror>
+                                            <span class="dot"></span>
+                                            <span class="text-sm font-weight-bold" data-status-text>Display link disconnected</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-4 text-end">
+                                    <div class="icon icon-shape bg-gradient-success shadow text-center rounded-circle">
+                                        <i class="ni ni-tv-2 text-lg opacity-10" aria-hidden="true"></i>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-5" id="panel-players">
+                <div class="col-xl-4 col-sm-6 mb-4">
                     <div class="card">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-baseline gap-2">
-                                <h2 class="h6 mb-0">Players on the quiz</h2>
-                                <span class="text-sm">Joined: <strong id="player-count">0</strong></span>
+                        <div class="card-body p-3">
+                            <div class="row">
+                                <div class="col-8">
+                                    <div class="numbers">
+                                        <p class="text-sm mb-0 text-uppercase font-weight-bold">Players joined</p>
+                                        <h5 class="font-weight-bolder mb-0" id="player-count">0</h5>
+                                    </div>
+                                </div>
+                                <div class="col-4 text-end">
+                                    <div class="icon icon-shape bg-gradient-info shadow text-center rounded-circle">
+                                        <i class="ni ni-single-02 text-lg opacity-10" aria-hidden="true"></i>
+                                    </div>
+                                </div>
                             </div>
-                            <p class="text-sm mb-2">The quiz socket is public. No player account is required.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-4 col-sm-6 mb-4">
+                    <div class="card">
+                        <div class="card-body p-3">
+                            <div class="row">
+                                <div class="col-8">
+                                    <div class="numbers">
+                                        <p class="text-sm mb-0 text-uppercase font-weight-bold">Signed in</p>
+                                        <h5 class="font-weight-bolder mb-0">{{.Role}}</h5>
+                                        <p class="mb-0 text-sm">{{.Email}}</p>
+                                    </div>
+                                </div>
+                                <div class="col-4 text-end">
+                                    <div class="icon icon-shape bg-gradient-primary shadow text-center rounded-circle">
+                                        <i class="ni ni-badge text-lg opacity-10" aria-hidden="true"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12 mb-4" id="panel-display">
+                    <div class="card">
+                        <div class="card-header pb-0">
+                            <h6 class="mb-0">Display window</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex flex-wrap gap-2">
+                                <button type="button" class="btn btn-sm btn-outline-primary mb-0" id="show-window">Show</button>
+                                <button type="button" class="btn btn-sm btn-outline-primary mb-0" id="hide-window">Hide</button>
+                                <button type="button" class="btn btn-sm btn-outline-primary mb-0" id="toggle-window">Toggle</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-7 mb-4" id="panel-game">
+                    <div class="card h-100">
+                        <div class="card-header pb-0">
+                            <h6 class="mb-0">Quiz</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="field">
+                                <select id="game-select" class="form-select" aria-label="Quiz"><option value="">Loading quizzes...</option></select>
+                            </div>
+                            <div class="d-flex flex-wrap gap-2">
+                                <button type="button" class="btn btn-sm btn-success mb-0" id="start-game">Start</button>
+                                <button type="button" class="btn btn-sm btn-danger mb-0" id="stop-game">Stop</button>
+                                <button type="button" class="btn btn-sm btn-outline-primary mb-0" id="toggle-game">Game window</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-5 mb-4" id="panel-players">
+                    <div class="card h-100">
+                        <div class="card-header pb-0">
+                            <h6 class="mb-0">Players on the quiz</h6>
+                            <p class="text-sm mb-0">The quiz socket is public. No player account is required.</p>
+                        </div>
+                        <div class="card-body">
                             <div class="player-list" id="player-list"><div class="player">No players connected</div></div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="row g-3 mb-3" id="panel-screen">
-                <div class="col-lg-4" id="panel-video">
-                    <div class="card">
+            <div class="row" id="panel-screen">
+                <div class="col-lg-4 mb-4" id="panel-video">
+                    <div class="card h-100">
+                        <div class="card-header pb-0">
+                            <h6 class="mb-0">Video</h6>
+                        </div>
                         <div class="card-body">
-                            <h2 class="h6 mb-3">Video</h2>
                             <div class="field">
                                 <label class="form-label" for="video-url">YouTube or video file URL</label>
-                                <input id="video-url" class="form-control form-control-sm" type="text" placeholder="https://youtube.com/watch?v=...">
+                                <input id="video-url" class="form-control" type="text" placeholder="https://youtube.com/watch?v=...">
                             </div>
-                            <button type="button" class="btn btn-sm btn-primary" id="show-video">Show video</button>
+                            <button type="button" class="btn btn-sm btn-primary mb-0" id="show-video">Show video</button>
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-4" id="panel-image">
-                    <div class="card">
+                <div class="col-lg-4 mb-4" id="panel-image">
+                    <div class="card h-100">
+                        <div class="card-header pb-0">
+                            <h6 class="mb-0">Image</h6>
+                        </div>
                         <div class="card-body">
-                            <h2 class="h6 mb-3">Image</h2>
                             <div class="field">
                                 <label class="form-label" for="image-url">Image URL</label>
-                                <input id="image-url" class="form-control form-control-sm" type="text" placeholder="https://example.com/image.png">
+                                <input id="image-url" class="form-control" type="text" placeholder="https://example.com/image.png">
                             </div>
-                            <button type="button" class="btn btn-sm btn-primary" id="show-image">Show image</button>
+                            <button type="button" class="btn btn-sm btn-primary mb-0" id="show-image">Show image</button>
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-4" id="panel-text">
-                    <div class="card">
+                <div class="col-lg-4 mb-4" id="panel-text">
+                    <div class="card h-100">
+                        <div class="card-header pb-0">
+                            <h6 class="mb-0">Text</h6>
+                        </div>
                         <div class="card-body">
-                            <h2 class="h6 mb-3">Text</h2>
                             <div class="field">
                                 <label class="form-label" for="text-title">Title</label>
-                                <input id="text-title" class="form-control form-control-sm" type="text" value="CodeCamp Sponsors 2025">
+                                <input id="text-title" class="form-control" type="text" value="CodeCamp Sponsors 2025">
                             </div>
                             <div class="field">
                                 <label class="form-label" for="text-content">Content</label>
-                                <textarea id="text-content" class="form-control form-control-sm" rows="3">Our sponsors make this possible. Please support them!</textarea>
+                                <textarea id="text-content" class="form-control" rows="3">Our sponsors make this possible. Please support them!</textarea>
                             </div>
-                            <button type="button" class="btn btn-sm btn-primary" id="show-text">Show text</button>
+                            <button type="button" class="btn btn-sm btn-primary mb-0" id="show-text">Show text</button>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="row g-3">
-                <div class="col-lg-6" id="panel-audio">
-                    <div class="card">
+            <div class="row">
+                <div class="col-lg-6 mb-4" id="panel-audio">
+                    <div class="card h-100">
+                        <div class="card-header pb-0">
+                            <h6 class="mb-0">Room audio</h6>
+                        </div>
                         <div class="card-body">
-                            <h2 class="h6 mb-3">Room audio</h2>
                             <div class="field">
                                 <label class="form-label" for="youtube-audio-url">YouTube URL</label>
-                                <input id="youtube-audio-url" class="form-control form-control-sm" type="url" placeholder="https://www.youtube.com/watch?v=...">
+                                <input id="youtube-audio-url" class="form-control" type="url" placeholder="https://www.youtube.com/watch?v=...">
                             </div>
-                            <div class="d-flex flex-wrap gap-2 mb-2">
-                                <button type="button" class="btn btn-sm btn-success" id="play-audio">Play</button>
-                                <button type="button" class="btn btn-sm btn-danger" id="stop-audio">Stop</button>
+                            <div class="d-flex flex-wrap gap-2 mb-3">
+                                <button type="button" class="btn btn-sm btn-success mb-0" id="play-audio">Play</button>
+                                <button type="button" class="btn btn-sm btn-danger mb-0" id="stop-audio">Stop</button>
                             </div>
                             <div class="d-flex flex-wrap gap-2">
-                                <button type="button" class="btn btn-sm btn-outline-light" data-audio="https://www.youtube.com/watch?v=jfKfPfyJRdk">Lofi Hip Hop</button>
-                                <button type="button" class="btn btn-sm btn-outline-light" data-audio="https://www.youtube.com/watch?v=5qap5aO4i9A">Lofi Beats</button>
+                                <button type="button" class="btn btn-sm btn-outline-primary mb-0" data-audio="https://www.youtube.com/watch?v=jfKfPfyJRdk">Lofi Hip Hop</button>
+                                <button type="button" class="btn btn-sm btn-outline-primary mb-0" data-audio="https://www.youtube.com/watch?v=5qap5aO4i9A">Lofi Beats</button>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-6" id="panel-notifications">
-                    <div class="card">
+                <div class="col-lg-6 mb-4" id="panel-notifications">
+                    <div class="card h-100">
+                        <div class="card-header pb-0">
+                            <h6 class="mb-0">Notifications</h6>
+                        </div>
                         <div class="card-body">
-                            <h2 class="h6 mb-3">Notifications</h2>
-                            <div class="d-flex flex-wrap gap-2 mb-2" id="notif-types">
-                                <button type="button" class="btn btn-sm btn-outline-light active" data-notif-type="info">Info</button>
-                                <button type="button" class="btn btn-sm btn-outline-light" data-notif-type="success">Success</button>
-                                <button type="button" class="btn btn-sm btn-outline-light" data-notif-type="warning">Warning</button>
-                                <button type="button" class="btn btn-sm btn-outline-light" data-notif-type="error">Error</button>
+                            <div class="d-flex flex-wrap gap-2 mb-3" id="notif-types">
+                                <button type="button" class="btn btn-sm btn-outline-primary mb-0 active" data-notif-type="info">Info</button>
+                                <button type="button" class="btn btn-sm btn-outline-primary mb-0" data-notif-type="success">Success</button>
+                                <button type="button" class="btn btn-sm btn-outline-primary mb-0" data-notif-type="warning">Warning</button>
+                                <button type="button" class="btn btn-sm btn-outline-primary mb-0" data-notif-type="error">Error</button>
                             </div>
-                            <div class="d-flex flex-wrap gap-2 mb-2" id="precanned"></div>
+                            <div class="d-flex flex-wrap gap-2 mb-3" id="precanned"></div>
                             <div class="field">
                                 <label class="form-label" for="notif-title">Custom title</label>
-                                <input id="notif-title" class="form-control form-control-sm" type="text">
+                                <input id="notif-title" class="form-control" type="text">
                             </div>
                             <div class="field">
                                 <label class="form-label" for="notif-message">Custom message</label>
-                                <textarea id="notif-message" class="form-control form-control-sm" rows="2"></textarea>
+                                <textarea id="notif-message" class="form-control" rows="2"></textarea>
                             </div>
                             <div class="d-flex flex-wrap gap-2">
-                                <button type="button" class="btn btn-sm btn-primary" id="send-notif">Send notification</button>
-                                <button type="button" class="btn btn-sm btn-danger" id="dismiss-notifs">Dismiss all</button>
+                                <button type="button" class="btn btn-sm btn-primary mb-0" id="send-notif">Send notification</button>
+                                <button type="button" class="btn btn-sm btn-danger mb-0" id="dismiss-notifs">Dismiss all</button>
                             </div>
                         </div>
                     </div>
@@ -231,81 +324,89 @@
             {{end}}
 
             {{if eq .Section "settings"}}
-            <section class="card" id="panel-settings">
-                <div class="card-body">
-                    <h2 class="h6 mb-2">Room settings</h2>
-                    <p class="text-sm">Saved on this machine. The public display updates when you save.</p>
-                    <form method="post" action="/admin/settings">
-                        <input type="hidden" name="csrf" value="{{.CSRF}}">
-                        <div class="field">
-                            <label class="form-label" for="event-title-input">Event title</label>
-                            <input id="event-title-input" class="form-control form-control-sm" name="eventTitle" type="text" maxlength="80" value="{{.EventTitle}}">
+            <div class="row">
+                <div class="col-12">
+                    <section class="card" id="panel-settings">
+                        <div class="card-header pb-0">
+                            <h6 class="mb-0">Room settings</h6>
+                            <p class="text-sm mb-0">Saved on this machine. The public display updates when you save.</p>
                         </div>
-                        <div class="row g-3">
-                            <div class="col-md-6">
+                        <div class="card-body">
+                            <form method="post" action="/admin/settings">
+                                <input type="hidden" name="csrf" value="{{.CSRF}}">
                                 <div class="field">
-                                    <label class="form-label" for="wifi-ssid">Wi-Fi network</label>
-                                    <input id="wifi-ssid" class="form-control form-control-sm" name="wifiSsid" type="text" maxlength="64" autocomplete="off" value="{{.WifiSSID}}">
+                                    <label class="form-label" for="event-title-input">Event title</label>
+                                    <input id="event-title-input" class="form-control" name="eventTitle" type="text" maxlength="80" value="{{.EventTitle}}">
                                 </div>
-                            </div>
-                            <div class="col-md-6">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="field">
+                                            <label class="form-label" for="wifi-ssid">Wi-Fi network</label>
+                                            <input id="wifi-ssid" class="form-control" name="wifiSsid" type="text" maxlength="64" autocomplete="off" value="{{.WifiSSID}}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="field">
+                                            <label class="form-label" for="wifi-password">Wi-Fi password</label>
+                                            <input id="wifi-password" class="form-control" name="wifiPassword" type="text" maxlength="64" autocomplete="off" value="{{.WifiPassword}}">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="field">
+                                            <label class="form-label" for="event-start">Camp starts</label>
+                                            <input id="event-start" class="form-control" name="eventStart" type="datetime-local" required value="{{.EventStart}}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="field">
+                                            <label class="form-label" for="day-camp-end">Day camp ends</label>
+                                            <input id="day-camp-end" class="form-control" name="dayCampEnd" type="datetime-local" required value="{{.DayCampEnd}}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="field">
+                                            <label class="form-label" for="camp24-end">24-hour camp ends</label>
+                                            <input id="camp24-end" class="form-control" name="camp24End" type="datetime-local" required value="{{.Camp24End}}">
+                                        </div>
+                                    </div>
+                                </div>
                                 <div class="field">
-                                    <label class="form-label" for="wifi-password">Wi-Fi password</label>
-                                    <input id="wifi-password" class="form-control form-control-sm" name="wifiPassword" type="text" maxlength="64" autocomplete="off" value="{{.WifiPassword}}">
+                                    <label class="form-label" for="ticker-announcements">Ticker, one announcement per line</label>
+                                    <textarea id="ticker-announcements" class="form-control" name="ticker" rows="4">{{.Ticker}}</textarea>
                                 </div>
-                            </div>
-                        </div>
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <div class="field">
-                                    <label class="form-label" for="event-start">Camp starts</label>
-                                    <input id="event-start" class="form-control form-control-sm" name="eventStart" type="datetime-local" required value="{{.EventStart}}">
+                                <div class="d-flex flex-wrap gap-2 mb-3">
+                                    <button type="submit" class="btn btn-sm btn-success mb-0">Save room settings</button>
+                                    <button type="button" class="btn btn-sm btn-outline-primary mb-0" id="update-ticker">Update ticker</button>
+                                    <button type="button" class="btn btn-sm btn-outline-primary mb-0" id="clear-ticker">Clear</button>
                                 </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="field">
-                                    <label class="form-label" for="day-camp-end">Day camp ends</label>
-                                    <input id="day-camp-end" class="form-control form-control-sm" name="dayCampEnd" type="datetime-local" required value="{{.DayCampEnd}}">
+                                <div class="d-flex flex-wrap gap-2">
+                                    <button type="button" class="btn btn-sm btn-outline-primary mb-0" data-ticker="Break time in 5 minutes">Break</button>
+                                    <button type="button" class="btn btn-sm btn-outline-primary mb-0" data-ticker="Lunch is being served">Lunch</button>
+                                    <button type="button" class="btn btn-sm btn-outline-primary mb-0" data-ticker="Game starting soon!">Game soon</button>
                                 </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="field">
-                                    <label class="form-label" for="camp24-end">24-hour camp ends</label>
-                                    <input id="camp24-end" class="form-control form-control-sm" name="camp24End" type="datetime-local" required value="{{.Camp24End}}">
-                                </div>
-                            </div>
+                            </form>
                         </div>
-                        <div class="field">
-                            <label class="form-label" for="ticker-announcements">Ticker, one announcement per line</label>
-                            <textarea id="ticker-announcements" class="form-control form-control-sm" name="ticker" rows="4">{{.Ticker}}</textarea>
-                        </div>
-                        <div class="d-flex flex-wrap gap-2 mb-2">
-                            <button type="submit" class="btn btn-sm btn-success">Save room settings</button>
-                            <button type="button" class="btn btn-sm btn-outline-light" id="update-ticker">Update ticker</button>
-                            <button type="button" class="btn btn-sm btn-outline-light" id="clear-ticker">Clear</button>
-                        </div>
-                        <div class="d-flex flex-wrap gap-2">
-                            <button type="button" class="btn btn-sm btn-outline-light" data-ticker="Break time in 5 minutes">Break</button>
-                            <button type="button" class="btn btn-sm btn-outline-light" data-ticker="Lunch is being served">Lunch</button>
-                            <button type="button" class="btn btn-sm btn-outline-light" data-ticker="Game starting soon!">Game soon</button>
-                        </div>
-                    </form>
+                    </section>
                 </div>
-            </section>
+            </div>
             {{end}}
 
             {{if eq .Section "logos"}}
-            <div class="row g-3">
-                <div class="col-lg-6">
+            <div class="row">
+                <div class="col-lg-6 mb-4">
                     <section class="card h-100" id="sponsor-logos">
+                        <div class="card-header pb-0">
+                            <h6 class="mb-0">Sponsor logos</h6>
+                            <p class="text-sm mb-0">Stored on this machine. The display loads logos whose event matches the current event title.</p>
+                        </div>
                         <div class="card-body">
-                            <h2 class="h6 mb-2">Sponsor logos</h2>
-                            <p class="text-sm">Stored on this machine. The display loads logos whose event matches the current event title.</p>
                             <form id="logo-form" method="post" action="/admin/logos" enctype="multipart/form-data">
                                 <input type="hidden" name="csrf" value="{{.CSRF}}">
                                 <div class="field">
                                     <label class="form-label" for="logo-file">Image</label>
-                                    <input id="logo-file" class="form-control form-control-sm" name="source" type="file" accept="image/png,image/jpeg,image/gif,image/webp">
+                                    <input id="logo-file" class="form-control" name="source" type="file" accept="image/png,image/jpeg,image/gif,image/webp">
                                 </div>
                                 <div class="crop-stage" id="crop-stage" hidden>
                                     <canvas id="crop-canvas" width="320" height="320"></canvas>
@@ -322,11 +423,11 @@
                                     <label class="form-label" for="logo-color">Background color</label>
                                     <input id="logo-color" class="form-control form-control-color" type="color" value="#ffffff">
                                 </div>
-                                <div class="row g-3">
+                                <div class="row">
                                     <div class="col-sm-7">
                                         <div class="field">
                                             <label class="form-label" for="logo-event">Event</label>
-                                            <input id="logo-event" class="form-control form-control-sm" name="event" type="text" maxlength="80" required value="{{.LogoEvent}}" list="logo-events">
+                                            <input id="logo-event" class="form-control" name="event" type="text" maxlength="80" required value="{{.LogoEvent}}" list="logo-events">
                                             <datalist id="logo-events">
                                                 {{range .Events}}<option value="{{.}}"></option>{{end}}
                                             </datalist>
@@ -335,138 +436,154 @@
                                     <div class="col-sm-5">
                                         <div class="field">
                                             <label class="form-label" for="logo-seconds">Display time, in seconds</label>
-                                            <input id="logo-seconds" class="form-control form-control-sm" name="seconds" type="number" min="1" max="600" step="1" required value="15">
+                                            <input id="logo-seconds" class="form-control" name="seconds" type="number" min="1" max="600" step="1" required value="15">
                                         </div>
                                     </div>
                                 </div>
-                                <button type="submit" class="btn btn-sm btn-success" id="logo-save" disabled>Save logo</button>
+                                <button type="submit" class="btn btn-sm btn-success mb-0" id="logo-save" disabled>Save logo</button>
                             </form>
                         </div>
                     </section>
                 </div>
-                <div class="col-lg-6">
+                <div class="col-lg-6 mb-4">
                     <section class="card h-100">
+                        <div class="card-header pb-0">
+                            <h6 class="mb-0">Upload several</h6>
+                            <p class="text-sm mb-0">These images are saved whole, without the crop tool. One upload can include up to 30 images and 64MB. PNG, JPEG, or GIF.</p>
+                        </div>
                         <div class="card-body">
                             <form id="logo-bulk-form" method="post" action="/admin/logos/bulk" enctype="multipart/form-data">
                                 <input type="hidden" name="csrf" value="{{.CSRF}}">
-                                <h2 class="h6 mb-2">Upload several</h2>
-                                <p class="text-sm">These images are saved whole, without the crop tool. One upload can include up to 30 images and 64MB. PNG, JPEG, or GIF.</p>
                                 <div class="field">
                                     <label class="form-label" for="logo-bulk-file">Images</label>
-                                    <input id="logo-bulk-file" class="form-control form-control-sm" name="logos" type="file" accept="image/png,image/jpeg,image/gif" multiple required>
+                                    <input id="logo-bulk-file" class="form-control" name="logos" type="file" accept="image/png,image/jpeg,image/gif" multiple required>
                                 </div>
-                                <div class="row g-3">
+                                <div class="row">
                                     <div class="col-sm-7">
                                         <div class="field">
                                             <label class="form-label" for="logo-bulk-event">Event</label>
-                                            <input id="logo-bulk-event" class="form-control form-control-sm" name="event" type="text" maxlength="80" required value="{{.LogoEvent}}" list="logo-events">
+                                            <input id="logo-bulk-event" class="form-control" name="event" type="text" maxlength="80" required value="{{.LogoEvent}}" list="logo-events">
                                         </div>
                                     </div>
                                     <div class="col-sm-5">
                                         <div class="field">
                                             <label class="form-label" for="logo-bulk-seconds">Display time, in seconds</label>
-                                            <input id="logo-bulk-seconds" class="form-control form-control-sm" name="seconds" type="number" min="1" max="600" step="1" required value="15">
+                                            <input id="logo-bulk-seconds" class="form-control" name="seconds" type="number" min="1" max="600" step="1" required value="15">
                                         </div>
                                     </div>
                                 </div>
-                                <button type="submit" class="btn btn-sm btn-success">Upload logos</button>
+                                <button type="submit" class="btn btn-sm btn-success mb-0">Upload logos</button>
                             </form>
                         </div>
                     </section>
                 </div>
             </div>
-            <section class="card mt-3">
-                <div class="table-responsive">
-                    <table class="table table-sm align-middle mb-0">
-                        <thead>
-                            <tr><th></th><th>Event</th><th>Seconds</th><th></th></tr>
-                        </thead>
-                        <tbody>
-                            {{range .Logos}}
-                            <tr>
-                                <td><img class="logo-thumb" src="{{.URL}}" alt=""></td>
-                                <td>{{.Event}}</td>
-                                <td>{{.Seconds}}</td>
-                                <td>
-                                    <form method="post" action="/admin/logos/{{.ID}}/delete" data-confirm="Remove this logo?">
-                                        <input type="hidden" name="csrf" value="{{$.CSRF}}">
-                                        <button class="btn btn-sm btn-danger" type="submit">Remove</button>
-                                    </form>
-                                </td>
-                            </tr>
-                            {{else}}
-                            <tr><td colspan="4">No logos yet.</td></tr>
-                            {{end}}
-                        </tbody>
-                    </table>
+            <div class="row">
+                <div class="col-12">
+                    <section class="card">
+                        <div class="table-responsive">
+                            <table class="table align-items-center mb-0">
+                                <thead>
+                                    <tr><th></th><th>Event</th><th>Seconds</th><th></th></tr>
+                                </thead>
+                                <tbody>
+                                    {{range .Logos}}
+                                    <tr>
+                                        <td><img class="logo-thumb" src="{{.URL}}" alt=""></td>
+                                        <td>{{.Event}}</td>
+                                        <td>{{.Seconds}}</td>
+                                        <td>
+                                            <form method="post" action="/admin/logos/{{.ID}}/delete" data-confirm="Remove this logo?">
+                                                <input type="hidden" name="csrf" value="{{$.CSRF}}">
+                                                <button class="btn btn-sm btn-danger mb-0" type="submit">Remove</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    {{else}}
+                                    <tr><td colspan="4">No logos yet.</td></tr>
+                                    {{end}}
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
                 </div>
-            </section>
+            </div>
             {{end}}
 
             {{if eq .Section "users"}}
-            <section class="card">
-                <div class="card-body">
-                    <h2 class="h6 mb-2">Dashboard access</h2>
-                    {{if .IsAdmin}}
-                    <p class="text-sm">Add a staff member or another admin. They sign in with email and password. Only admins can manage this list.</p>
-                    <form method="post" action="/admin/users">
-                        <input type="hidden" name="csrf" value="{{.CSRF}}">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <div class="field">
-                                    <label class="form-label" for="new-email">Email</label>
-                                    <input id="new-email" class="form-control form-control-sm" name="email" type="email" autocomplete="off" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="field">
-                                    <label class="form-label" for="new-password">Temporary password</label>
-                                    <input id="new-password" class="form-control form-control-sm" name="password" type="text" autocomplete="new-password" minlength="10" required>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="field">
-                            <label class="form-label" for="new-role">Role</label>
-                            <select id="new-role" class="form-select form-select-sm" name="role">
-                                <option value="staff">Staff — can run the show</option>
-                                <option value="admin">Admin — can also add and remove users</option>
-                            </select>
-                        </div>
-                        <button class="btn btn-sm btn-primary" type="submit">Add user</button>
-                    </form>
-                    {{else}}
-                    <p class="text-sm">You can run the display and the quiz. An admin has to add or remove dashboard users.</p>
-                    {{end}}
-                </div>
-                <div class="table-responsive">
-                    <table class="table table-sm align-middle mb-0">
-                        <thead>
-                            <tr><th>Email</th><th>Role</th><th>Added</th><th></th></tr>
-                        </thead>
-                        <tbody>
-                            {{range .Users}}
-                            <tr>
-                                <td>{{.Email}}</td>
-                                <td><span class="badge">{{.Role}}</span></td>
-                                <td>{{.Created}}</td>
-                                <td>
-                                    {{if .CanRemove}}
-                                    <form method="post" action="/admin/users/{{.ID}}/delete" data-confirm="Remove this user from the dashboard?">
-                                        <input type="hidden" name="csrf" value="{{$.CSRF}}">
-                                        <button class="btn btn-sm btn-danger" type="submit">Remove</button>
-                                    </form>
-                                    {{end}}
-                                </td>
-                            </tr>
+            <div class="row">
+                <div class="col-12">
+                    <section class="card">
+                        <div class="card-header pb-0">
+                            <h6 class="mb-0">Dashboard access</h6>
+                            {{if .IsAdmin}}
+                            <p class="text-sm mb-0">Add a staff member or another admin. They sign in with email and password. Only admins can manage this list.</p>
+                            {{else}}
+                            <p class="text-sm mb-0">You can run the display and the quiz. An admin has to add or remove dashboard users.</p>
                             {{end}}
-                        </tbody>
-                    </table>
+                        </div>
+                        {{if .IsAdmin}}
+                        <div class="card-body">
+                            <form method="post" action="/admin/users">
+                                <input type="hidden" name="csrf" value="{{.CSRF}}">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="field">
+                                            <label class="form-label" for="new-email">Email</label>
+                                            <input id="new-email" class="form-control" name="email" type="email" autocomplete="off" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="field">
+                                            <label class="form-label" for="new-password">Temporary password</label>
+                                            <input id="new-password" class="form-control" name="password" type="text" autocomplete="new-password" minlength="10" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label class="form-label" for="new-role">Role</label>
+                                    <select id="new-role" class="form-select" name="role">
+                                        <option value="staff">Staff — can run the show</option>
+                                        <option value="admin">Admin — can also add and remove users</option>
+                                    </select>
+                                </div>
+                                <button class="btn btn-sm btn-primary mb-0" type="submit">Add user</button>
+                            </form>
+                        </div>
+                        {{end}}
+                        <div class="table-responsive">
+                            <table class="table align-items-center mb-0">
+                                <thead>
+                                    <tr><th>Email</th><th>Role</th><th>Added</th><th></th></tr>
+                                </thead>
+                                <tbody>
+                                    {{range .Users}}
+                                    <tr>
+                                        <td>{{.Email}}</td>
+                                        <td><span class="badge bg-gradient-primary">{{.Role}}</span></td>
+                                        <td>{{.Created}}</td>
+                                        <td>
+                                            {{if .CanRemove}}
+                                            <form method="post" action="/admin/users/{{.ID}}/delete" data-confirm="Remove this user from the dashboard?">
+                                                <input type="hidden" name="csrf" value="{{$.CSRF}}">
+                                                <button class="btn btn-sm btn-danger mb-0" type="submit">Remove</button>
+                                            </form>
+                                            {{end}}
+                                        </td>
+                                    </tr>
+                                    {{end}}
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
                 </div>
-            </section>
+            </div>
             {{end}}
 
-            <footer class="footer pt-4">
-                <p class="text-sm mb-0">Dashboard template by Creative Tim, MIT.</p>
+            <footer class="footer pt-3">
+                <div class="container-fluid">
+                    <p class="text-sm mb-0 text-secondary">Dashboard template by Creative Tim, MIT.</p>
+                </div>
             </footer>
         </div>
     </main>

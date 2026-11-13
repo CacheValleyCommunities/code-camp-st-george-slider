@@ -125,7 +125,7 @@ if (cannedBox) {
     Object.keys(canned).forEach((key) => {
         const button = document.createElement("button");
         button.type = "button";
-        button.className = "btn btn-sm btn-outline-light";
+        button.className = "btn btn-sm btn-outline-primary mb-0";
         button.textContent = canned[key].title;
         button.addEventListener("click", () => {
             const item = canned[key];

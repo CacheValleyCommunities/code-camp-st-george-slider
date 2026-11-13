@@ -8,13 +8,13 @@
     <link rel="stylesheet" href="/vendor/argon/css/argon-dashboard.min.css">
     <link rel="stylesheet" href="/css/admin.css">
 </head>
-<body class="auth-body dark-version">
+<body class="bg-gray-100 auth-body">
     <main class="auth-card card">
         <div class="card-body">
-            <div class="text-xs text-uppercase brand">CodeCamp 2025</div>
-            <h1 class="h4 mb-2">Dashboard sign in</h1>
+            <div class="text-xs text-uppercase font-weight-bold brand">CodeCamp 2025</div>
+            <h1 class="h4 font-weight-bolder mb-2">Dashboard sign in</h1>
             <p class="text-sm">Staff only. Players join the quiz from the game screen and do not need an account.</p>
-            {{if .Error}}<div class="alert alert-danger banner bad" role="alert">{{.Error}}</div>{{end}}
+            {{if .Error}}<div class="alert alert-danger text-white" role="alert">{{.Error}}</div>{{end}}
             <form method="post" action="/login">
                 <input type="hidden" name="csrf" value="{{.CSRF}}">
                 <div class="field">
@@ -25,10 +25,10 @@
                     <label class="form-label" for="password">Password</label>
                     <input id="password" class="form-control" name="password" type="password" autocomplete="current-password" required>
                 </div>
-                <button class="btn btn-primary w-100" type="submit">Sign in</button>
+                <button class="btn btn-primary w-100 mb-0" type="submit">Sign in</button>
             </form>
         </div>
     </main>
-    <p class="text-sm text-center credit">Dashboard template by Creative Tim, MIT.</p>
+    <p class="text-sm text-center text-secondary credit">Dashboard template by Creative Tim, MIT.</p>
 </body>
 </html>
